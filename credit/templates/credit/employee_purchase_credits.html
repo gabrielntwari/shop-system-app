@@ -1,0 +1,198 @@
+{% extends "users/base.html" %}
+
+{% block title %}Supplier Credits{% endblock %}
+
+{% block page_title %}Supplier Credits{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        
+        <p>Track supplier payments for your credit purchases.</p>
+    </div>
+</div>
+
+<div class="stats-grid">
+
+    <div class="card credit-stat-card">
+        <span class="stat-label">Original Credit</span>
+        <span class="stat-value">
+            {{ total_original }}
+        </span>
+    </div>
+
+    <div class="card credit-stat-card">
+        <span class="stat-label">Total Paid</span>
+        <span class="stat-value credit-paid">
+            {{ total_paid }}
+        </span>
+    </div>
+
+    <div class="card credit-stat-card">
+        <span class="stat-label">Outstanding</span>
+        <span class="stat-value credit-outstanding">
+            {{ total_outstanding }}
+        </span>
+    </div>
+
+</div>
+
+<div class="card transaction-filter-card">
+
+    <form method="GET" class="transaction-filter">
+
+        <div class="filter-group">
+
+            <label for="status">Credit Status</label>
+
+            <select name="status" id="status" class="form-control">
+
+                <option value="outstanding"
+                    {% if selected_status == "outstanding" %}selected{% endif %}>
+                    Outstanding
+                </option>
+
+                <option value="cleared"
+                    {% if selected_status == "cleared" %}selected{% endif %}>
+                    Cleared
+                </option>
+
+                <option value="all"
+                    {% if selected_status == "all" %}selected{% endif %}>
+                    All
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="filter-buttons">
+
+            <button type="submit" class="btn btn-primary">
+                Apply
+            </button>
+
+            <a href="{% url 'employee_purchase_credits' %}"
+               class="btn btn-secondary">
+                Clear
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+<div class="card">
+
+    <div class="page-header">
+        <div>
+            <h2>My Credit Purchases</h2>
+            <p>Supplier purchases recorded by you on credit.</p>
+        </div>
+    </div>
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Supplier</th>
+                    <th>Product</th>
+                    <th>Total</th>
+                    <th>Paid</th>
+                    <th>Outstanding</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for purchase in purchases %}
+
+                <tr>
+
+                    <td>{{ purchase.date }}</td>
+
+                    <td>
+                        {{ purchase.supplier|default:"Unknown" }}
+                    </td>
+
+                    <td>
+                        {{ purchase.product.item_name }}
+                    </td>
+
+                    <td>
+                        {{ purchase.total_cost }}
+                    </td>
+
+                    <td>
+                        {{ purchase.total_credit_paid }}
+                    </td>
+
+                    <td class="credit-amount">
+                        {{ purchase.outstanding_credit }}
+                    </td>
+
+                    <td>
+
+                        {% if purchase.credit_cleared %}
+
+                            <span class="credit-status credit-cleared">
+                                Cleared
+                            </span>
+
+                        {% else %}
+
+                            <span class="credit-status credit-pending">
+                                Outstanding
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {% if not purchase.credit_cleared %}
+
+                            <a href="{% url 'pay_purchase_credit' purchase.id %}"
+                               class="btn btn-success btn-small">
+                                Record Payment
+                            </a>
+
+                        {% else %}
+
+                            <span class="credit-complete">
+                                Fully Paid
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="8">
+                        No credit purchases found.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "users/base.html" %}
+
+{% block title %}Record Customer Payment{% endblock %}
+
+{% block page_title %}Record Customer Payment{% endblock %}
+
+{% block content %}
+
+<div class="credit-payment-wrapper">
+
+
+<div class="card credit-payment-card">
+
+    <div class="page-header">
+        <div>
+            <p>Record a payment made toward this credit sale.</p>
+        </div>
+    </div>
+
+    <div class="credit-summary">
+
+        <div>
+            <span>Customer</span>
+            <strong>
+                {{ sale.customer_name|default:"Unknown" }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Product</span>
+            <strong>
+                {{ sale.product.item_name }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Total Credit</span>
+            <strong>
+                {{ sale.total_sales }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Already Paid</span>
+            <strong class="credit-paid">
+                {{ sale.total_credit_paid }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Remaining</span>
+            <strong class="credit-outstanding">
+                {{ sale.outstanding_credit }}
+            </strong>
+        </div>
+
+    </div>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <div class="payment-actions">
+
+            <button type="submit" class="btn btn-success">
+                Record Payment
+            </button>
+
+            {% if request.user.groups.all %}
+                {% if request.user.groups.all.0.name == "owner" %}
+
+                    <a href="{% url 'owner_sale_credits' %}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                {% else %}
+
+                    <a href="{% url 'employee_sale_credits' %}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                {% endif %}
+            {% endif %}
+
+        </div>
+
+    </form>
+
+</div>
+
+
+</div>
+
+{% endblock %}

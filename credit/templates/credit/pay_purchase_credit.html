@@ -1,0 +1,98 @@
+{% extends "users/base.html" %}
+
+{% block title %}Record Supplier Payment{% endblock %}
+
+{% block page_title %}Record Supplier Payment{% endblock %}
+
+{% block content %}
+
+<div class="credit-payment-wrapper">
+
+```
+<div class="card credit-payment-card">
+
+    <div class="page-header">
+        <div>
+            <p>Record a payment made toward this credit purchase.</p>
+        </div>
+    </div>
+
+    <div class="credit-summary">
+
+        <div>
+            <span>Supplier</span>
+            <strong>
+                {{ purchase.supplier|default:"Unknown" }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Product</span>
+            <strong>
+                {{ purchase.product.item_name }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Total Credit</span>
+            <strong>
+                {{ purchase.total_cost }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Already Paid</span>
+            <strong class="credit-paid">
+                {{ purchase.total_credit_paid }}
+            </strong>
+        </div>
+
+        <div>
+            <span>Remaining</span>
+            <strong class="credit-outstanding">
+                {{ purchase.outstanding_credit }}
+            </strong>
+        </div>
+
+    </div>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <div class="payment-actions">
+
+            <button type="submit" class="btn btn-success">
+                Record Payment
+            </button>
+
+            {% if request.user.groups.all %}
+                {% if request.user.groups.all.0.name == "owner" %}
+
+                    <a href="{% url 'owner_purchase_credits' %}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                {% else %}
+
+                    <a href="{% url 'employee_purchase_credits' %}"
+                       class="btn btn-secondary">
+                        Cancel
+                    </a>
+
+                {% endif %}
+            {% endif %}
+
+        </div>
+
+    </form>
+
+</div>
+```
+
+</div>
+
+{% endblock %}
