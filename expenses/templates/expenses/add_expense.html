@@ -1,0 +1,118 @@
+{% extends "users/base.html" %}
+
+{% block title %}
+    Record Expense | Shop Management System
+{% endblock %}
+
+{% block page_title %}
+    Record Expense
+{% endblock %}
+
+{% block content %}
+
+<div class="form-page">
+
+    <div class="form-card">
+
+        <div class="form-header">
+            <h2>Record Business Expense</h2>
+
+            <p>
+                Record an expense incurred by the shop.
+            </p>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            <!-- EXPENSE TYPE -->
+
+            <div class="form-group">
+
+                <label for="{{ form.expense_type.id_for_label }}">
+                    Expense Type
+                </label>
+
+                {{ form.expense_type }}
+
+                {% if form.expense_type.errors %}
+                    <div class="field-error">
+                        {{ form.expense_type.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- AMOUNT -->
+
+            <div class="form-group">
+
+                <label for="{{ form.amount.id_for_label }}">
+                    Amount (RWF)
+                </label>
+
+                {{ form.amount }}
+
+                {% if form.amount.errors %}
+                    <div class="field-error">
+                        {{ form.amount.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- DESCRIPTION -->
+
+            <div class="form-group">
+
+                <label for="{{ form.description.id_for_label }}">
+                    Description
+                </label>
+
+                {{ form.description }}
+
+                {% if form.description.errors %}
+                    <div class="field-error">
+                        {{ form.description.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="form-actions">
+
+                <a
+                    href="{% url 'dashboard' %}"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Record Expense
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

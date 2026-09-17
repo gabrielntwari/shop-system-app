@@ -1,0 +1,119 @@
+{% extends "users/base.html" %}
+
+{% block title %}Proformas | Shop Management System{% endblock %}
+
+{% block page_title %}Proformas{% endblock %}
+
+{% block extra_css %}
+<style>
+
+    .proforma-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .status-draft { background: #f3f4f6; color: #374151; }
+    .status-sent { background: #eff6ff; color: #1d4ed8; }
+    .status-accepted { background: #ecfdf5; color: #16a34a; }
+    .status-expired { background: #fef2f2; color: #dc2626; }
+    .status-converted { background: #f5f3ff; color: #7c3aed; }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="proforma-list-header">
+
+    <p>Manage quotations issued before a sale is confirmed.</p>
+
+    <a href="{% url 'create_proforma' %}" class="btn btn-primary">
+        + New Proforma
+    </a>
+
+</div>
+
+<div class="card">
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Number</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Valid Until</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Created By</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for proforma in proformas %}
+
+                    <tr>
+
+                        <td>{{ proforma.proforma_number }}</td>
+
+                        <td>{{ proforma.client_name }}</td>
+
+                        <td>{{ proforma.date|date:"d M Y" }}</td>
+
+                        <td>
+                            {{ proforma.valid_until|date:"d M Y" }}
+                            {% if proforma.is_expired %}
+                                <span class="status-badge status-expired">Expired</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ proforma.total|floatformat:2 }} RWF</td>
+
+                        <td>
+                            <span class="status-badge status-{{ proforma.status }}">
+                                {{ proforma.get_status_display }}
+                            </span>
+                        </td>
+
+                        <td>{{ proforma.created_by.username|default:"-" }}</td>
+
+                        <td>
+                            <a href="{% url 'proforma_detail' proforma.id %}" class="btn btn-small btn-secondary">
+                                View
+                            </a>
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="8">No proformas created yet.</td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

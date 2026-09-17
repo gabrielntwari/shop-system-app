@@ -1,0 +1,380 @@
+{% extends "users/base.html" %}
+
+{% block title %}Add Purchase{% endblock %}
+
+{% block page_title %}Add Purchase{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+
+    
+        <p>
+            Record a new purchase transaction.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    {% if form.non_field_errors %}
+
+        <div class="form-errors">
+
+            {{ form.non_field_errors }}
+
+        </div>
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <!-- =================================================
+             PRODUCT SELECTION
+        ================================================== -->
+
+        <div class="form-group">
+
+            <label>
+                Product
+            </label>
+
+            {{ form.product }}
+
+            {% if form.product.errors %}
+
+                {{ form.product.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =================================================
+             NEW PRODUCT OPTION
+        ================================================== -->
+
+        <div class="new-product-option">
+
+            <label>
+
+                {{ form.add_new_product }}
+
+                Add New Product
+
+            </label>
+
+        </div>
+
+
+        <!-- =================================================
+             NEW PRODUCT FIELDS
+        ================================================== -->
+
+        <div
+            id="new-product-section"
+            style="display: none;"
+        >
+
+            <div class="new-product-header">
+
+                <h3>
+                    New Product Details
+                </h3>
+
+                <p>
+                    Enter the details of the new product.
+                </p>
+
+            </div>
+
+
+            <div class="form-group">
+
+                {{ form.new_product_name.label_tag }}
+
+                {{ form.new_product_name }}
+
+                {% if form.new_product_name.errors %}
+
+                    {{ form.new_product_name.errors }}
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="form-group">
+
+                {{ form.new_product_brand.label_tag }}
+
+                {{ form.new_product_brand }}
+
+                {% if form.new_product_brand.errors %}
+
+                    {{ form.new_product_brand.errors }}
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="form-group">
+
+                {{ form.new_product_specification.label_tag }}
+
+                {{ form.new_product_specification }}
+
+                {% if form.new_product_specification.errors %}
+
+                    {{ form.new_product_specification.errors }}
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="form-group">
+
+                {{ form.new_product_minimum_price.label_tag }}
+
+                {{ form.new_product_minimum_price }}
+
+                {% if form.new_product_minimum_price.errors %}
+
+                    {{ form.new_product_minimum_price.errors }}
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="form-group">
+
+                {{ form.new_product_source.label_tag }}
+
+                {{ form.new_product_source }}
+
+                {% if form.new_product_source.errors %}
+
+                    {{ form.new_product_source.errors }}
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             PURCHASE DETAILS
+        ================================================== -->
+
+        <div class="form-group">
+
+            {{ form.quantity.label_tag }}
+
+            {{ form.quantity }}
+
+            {% if form.quantity.errors %}
+
+                {{ form.quantity.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
+            {{ form.unit_cost.label_tag }}
+
+            {{ form.unit_cost }}
+
+            {% if form.unit_cost.errors %}
+
+                {{ form.unit_cost.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
+            {{ form.supplier.label_tag }}
+
+            {{ form.supplier }}
+
+            {% if form.supplier.errors %}
+
+                {{ form.supplier.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
+            {{ form.supplier_email.label_tag }}
+
+            {{ form.supplier_email }}
+
+            {% if form.supplier_email.errors %}
+
+                {{ form.supplier_email.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
+            {{ form.supplier_phone.label_tag }}
+
+            {{ form.supplier_phone }}
+
+            {% if form.supplier_phone.errors %}
+
+                {{ form.supplier_phone.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
+            {{ form.payment_status.label_tag }}
+
+            {{ form.payment_status }}
+
+            {% if form.payment_status.errors %}
+
+                {{ form.payment_status.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="form-group">
+
+            {{ form.payment_method.label_tag }}
+
+            {{ form.payment_method }}
+
+            {% if form.payment_method.errors %}
+
+                {{ form.payment_method.errors }}
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- =================================================
+             BUTTONS
+        ================================================== -->
+
+        <div class="buttons">
+
+            <a
+                href="{% url 'dashboard' %}"
+                class="btn btn-secondary"
+            >
+                Back to Dashboard
+            </a>
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Add Purchase
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const checkbox =
+            document.getElementById(
+                "add-new-product-checkbox"
+            );
+
+        const existingProduct =
+            document.getElementById(
+                "existing-product"
+            );
+
+        const newProductSection =
+            document.getElementById(
+                "new-product-section"
+            );
+
+
+        function updateProductMode() {
+
+            if (checkbox.checked) {
+
+                newProductSection.style.display =
+                    "block";
+
+                existingProduct.disabled =
+                    true;
+
+                existingProduct.value =
+                    "";
+
+            } else {
+
+                newProductSection.style.display =
+                    "none";
+
+                existingProduct.disabled =
+                    false;
+
+            }
+
+        }
+
+
+        checkbox.addEventListener(
+            "change",
+            updateProductMode
+        );
+
+
+        updateProductMode();
+
+    }
+
+);
+
+</script>
+
+{% endblock %}

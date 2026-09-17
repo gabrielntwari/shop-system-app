@@ -1,0 +1,398 @@
+{% extends "users/base.html" %}
+
+{% block title %}Expenses & Withdrawals{% endblock %}
+
+{% block page_title %}Expenses & Withdrawals{% endblock %}
+
+{% block content %}
+
+<!-- =====================================================
+     PAGE HEADER
+===================================================== -->
+
+<div class="page-header">
+
+<div>
+    <h1>Expenses & Withdrawals</h1>
+
+    <p>
+        View business expenses and owner withdrawals recorded in the shop.
+    </p>
+</div>
+
+<div style="display: flex; gap: 10px; flex-wrap: wrap;">
+
+    <a
+        href="{% url 'add_expense' %}"
+        class="btn btn-primary"
+    >
+        + Record Expense
+    </a>
+
+    <a
+        href="{% url 'add_withdrawal' %}"
+        class="btn"
+        style="background: #111827; color: white;"
+    >
+        + Owner Withdrawal
+    </a>
+
+</div>
+
+</div>
+
+<!-- =====================================================
+     FINANCIAL SUMMARY
+===================================================== -->
+
+<div class="stats-grid">
+
+<!-- BUSINESS EXPENSES -->
+
+<div class="card stat-card">
+
+    <span class="stat-label">
+        Business Expenses
+    </span>
+
+    <span class="stat-value">
+        {{ total|default:"0" }} RWF
+    </span>
+
+    <small>
+        Operating expenses recorded by the shop
+    </small>
+
+</div>
+
+
+<!-- OWNER WITHDRAWALS -->
+
+<div class="card stat-card">
+
+    <span class="stat-label">
+        Owner Withdrawals
+    </span>
+
+    <span class="stat-value">
+        {{ withdrawal_total|default:"0" }} RWF
+    </span>
+
+    <small>
+        Money withdrawn by the owner
+    </small>
+
+</div>
+
+
+<!-- TOTAL OUTFLOWS -->
+
+<div class="card stat-card">
+
+    <span class="stat-label">
+        Total Outflows
+    </span>
+
+    <span class="stat-value">
+        {{ total_outflows|default:"0" }} RWF
+    </span>
+
+    <small>
+        Expenses + owner withdrawals
+    </small>
+
+</div>
+
+</div>
+
+<!-- =====================================================
+     BUSINESS EXPENSES
+===================================================== -->
+
+<div class="card">
+
+<div class="card-header">
+
+    <div>
+
+        <h2>Business Expenses</h2>
+
+        <p>
+            Expenses recorded by the owner and employees.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="table-container">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Date</th>
+                <th>Expense Type</th>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Description</th>
+                <th>Recorded By</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for expense in expenses %}
+
+            <tr>
+
+                <!-- DATE -->
+
+                <td>
+                    {{ expense.date|date:"M d, Y, g:i a" }}
+                </td>
+
+
+                <!-- EXPENSE TYPE -->
+
+                <td>
+
+                    <strong>
+                        {{ expense.expense_type }}
+                    </strong>
+
+                </td>
+
+
+                <!-- CATEGORY -->
+
+                <td>
+                    {{ expense.get_category_display }}
+                </td>
+
+
+                <!-- AMOUNT -->
+
+                <td>
+
+                    <strong>
+                        {{ expense.amount }} RWF
+                    </strong>
+
+                </td>
+
+
+                <!-- DESCRIPTION -->
+
+                <td>
+                    {{ expense.description|default:"-" }}
+                </td>
+
+
+                <!-- RECORDED BY -->
+
+                <td>
+
+                    {% if expense.recorded_by %}
+
+                        {{ expense.recorded_by.get_full_name|default:expense.recorded_by.username }}
+
+                    {% else %}
+
+                        Unknown
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+
+            {% empty %}
+
+            <tr>
+
+                <td colspan="6">
+
+                    No business expenses have been recorded yet.
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</div>
+
+<!-- =====================================================
+     OWNER WITHDRAWALS
+===================================================== -->
+
+<div
+    class="card"
+    style="margin-top: 20px;"
+>
+
+<div class="card-header">
+
+    <div>
+
+        <h2>Owner Withdrawals</h2>
+
+        <p>
+            Money withdrawn from the business by the owner.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="table-container">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Reason / Description</th>
+                <th>Recorded By</th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for withdrawal in withdrawals %}
+
+            <tr>
+
+                <!-- DATE -->
+
+                <td>
+                    {{ withdrawal.date|date:"M d, Y, g:i a" }}
+                </td>
+
+
+                <!-- AMOUNT -->
+
+                <td>
+
+                    <strong class="negative">
+                        {{ withdrawal.amount }} RWF
+                    </strong>
+
+                </td>
+
+
+                <!-- DESCRIPTION -->
+
+                <td>
+                    {{ withdrawal.description|default:"-" }}
+                </td>
+
+
+                <!-- RECORDED BY -->
+
+                <td>
+
+                    {% if withdrawal.recorded_by %}
+
+                        {{ withdrawal.recorded_by.get_full_name|default:withdrawal.recorded_by.username }}
+
+                    {% else %}
+
+                        Unknown
+
+                    {% endif %}
+
+                </td>
+
+            </tr>
+
+
+            {% empty %}
+
+            <tr>
+
+                <td colspan="4">
+
+                    No owner withdrawals have been recorded yet.
+
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+</div>
+
+<!-- =====================================================
+     TOTAL FINANCIAL OUTFLOW
+===================================================== -->
+
+<div
+    class="card"
+    style="
+        margin-top: 20px;
+        background: #f8fafc;
+    "
+>
+
+<div
+    style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    "
+>
+
+    <div>
+
+        <h3>
+            Total Financial Outflows
+        </h3>
+
+        <p>
+            Business expenses plus owner withdrawals.
+        </p>
+
+    </div>
+
+
+    <strong style="font-size: 24px;">
+
+        {{ total_outflows|default:"0" }} RWF
+
+    </strong>
+
+</div>
+
+</div>
+
+{% endblock %}

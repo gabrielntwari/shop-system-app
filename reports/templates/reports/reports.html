@@ -1,0 +1,1470 @@
+{% extends "users/base.html" %}
+
+{% load static %}
+
+{% block title %}
+    Reports | Shop Management System
+{% endblock %}
+
+{% block page_title %}
+    Reports
+{% endblock %}
+
+
+{% block extra_css %}
+
+<style>
+
+    /* =====================================================
+       REPORT PAGE
+    ===================================================== */
+
+    .reports-page {
+        width: 100%;
+    }
+
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .report-header h2 {
+        font-size: 26px;
+        margin-bottom: 5px;
+    }
+
+    .report-header p {
+        color: #6b7280;
+    }
+
+
+    /* =====================================================
+       FILTERS
+    ===================================================== */
+
+    .filter-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 22px;
+        margin-bottom: 25px;
+    }
+
+    .filter-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 7px;
+    }
+
+    .form-group select {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        background: white;
+    }
+
+    .report-button {
+        border: none;
+        border-radius: 7px;
+        padding: 11px 18px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #2563eb;
+        color: white;
+    }
+
+    .report-button:hover {
+        background: #1d4ed8;
+    }
+
+
+    /* =====================================================
+       SUMMARY
+    ===================================================== */
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 18px;
+        margin-bottom: 25px;
+    }
+
+    .summary-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 22px;
+    }
+
+    .summary-label {
+        color: #6b7280;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .summary-value {
+        font-size: 27px;
+        font-weight: 700;
+    }
+
+    .summary-note {
+        margin-top: 7px;
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+
+    /* =====================================================
+       REPORT GRID
+    ===================================================== */
+
+    .report-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        gap: 22px;
+        margin-bottom: 25px;
+    }
+
+    .report-card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 22px;
+    }
+
+    .report-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .report-card-header h3 {
+        font-size: 17px;
+    }
+
+    .report-card-header span {
+        font-size: 12px;
+        color: #6b7280;
+    }
+
+
+    /* =====================================================
+       TABLE
+    ===================================================== */
+
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .report-table th,
+    .report-table td {
+        padding: 13px 10px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .report-table th {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #6b7280;
+    }
+
+    .report-table td {
+        font-size: 13px;
+    }
+
+
+    /* =====================================================
+       PRODUCT BADGE
+    ===================================================== */
+
+    .product-badge {
+        display: inline-block;
+        padding: 5px 9px;
+        border-radius: 6px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+
+    /* =====================================================
+       STATUS
+    ===================================================== */
+
+    .positive {
+        color: #16a34a;
+        font-weight: 600;
+    }
+
+    .negative {
+        color: #dc2626;
+        font-weight: 600;
+    }
+
+
+    /* =====================================================
+       TOP PRODUCT BARS
+    ===================================================== */
+
+    .chart-row {
+        margin-bottom: 18px;
+    }
+
+    .chart-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 13px;
+    }
+
+    .bar-background {
+        height: 10px;
+        background: #e5e7eb;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    .bar {
+        height: 100%;
+        background: #2563eb;
+        border-radius: 20px;
+    }
+
+
+    /* =====================================================
+       GRAPH
+    ===================================================== */
+
+    .graph-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .graph {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        height: 240px;
+        padding: 20px 10px 35px;
+        min-width: 600px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .graph-column {
+        flex: 1;
+        min-width: 30px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .graph-bar {
+        width: 70%;
+        min-height: 3px;
+        background: #2563eb;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .graph-label {
+        margin-top: 8px;
+        font-size: 10px;
+        color: #6b7280;
+        white-space: nowrap;
+    }
+
+
+    /* =====================================================
+       REPORT FOOTER
+    ===================================================== */
+
+    .report-footer {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        padding: 18px;
+        color: #1e40af;
+        font-size: 13px;
+        margin-top: 10px;
+    }
+
+
+    /* =====================================================
+       MOBILE
+    ===================================================== */
+
+    @media (max-width: 768px) {
+
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .report-card {
+            padding: 17px;
+        }
+
+        .report-header h2 {
+            font-size: 22px;
+        }
+    }
+
+    @media (max-width: 500px) {
+
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .report-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="reports-page">
+
+
+    <!-- =================================================
+         HEADER
+    ================================================== -->
+
+    <div class="report-header">
+
+        <div>
+
+            <h2>Shop Reports</h2>
+
+            <p>
+                Analyze sales, purchases, stock and business performance.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         FILTERS
+    ================================================== -->
+
+    <div class="filter-card">
+
+        <div class="filter-title">
+            Report Filters
+        </div>
+
+        <form method="GET">
+
+            <div class="filter-grid">
+
+
+                <!-- PERIOD -->
+
+                <div class="form-group">
+
+                    <label>Period</label>
+
+                    <select name="period">
+
+                        <option value="today"
+                            {% if period == "today" %}selected{% endif %}>
+                            Today
+                        </option>
+
+                        <option value="yesterday"
+                            {% if period == "yesterday" %}selected{% endif %}>
+                            Yesterday
+                        </option>
+
+                        <option value="last_7_days"
+                            {% if period == "last_7_days" %}selected{% endif %}>
+                            Last 7 Days
+                        </option>
+
+                        <option value="this_month"
+                            {% if period == "this_month" %}selected{% endif %}>
+                            This Month
+                        </option>
+
+                        <option value="last_month"
+                            {% if period == "last_month" %}selected{% endif %}>
+                            Last Month
+                        </option>
+
+                        <option value="this_year"
+                            {% if period == "this_year" %}selected{% endif %}>
+                            This Year
+                        </option>
+
+                        <option value="last_year"
+                            {% if period == "last_year" %}selected{% endif %}>
+                            Last Year
+                        </option>
+
+                        <option value="all"
+                            {% if period == "all" %}selected{% endif %}>
+                            All Time
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- PRODUCT -->
+
+                <div class="form-group">
+
+                    <label>Product</label>
+
+                    <select name="product">
+
+                        <option value="">
+                            All Products
+                        </option>
+
+                        {% for product in products %}
+
+                            <option
+                                value="{{ product.id }}"
+                                {% if selected_product|stringformat:"s" == product.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ product.item_name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- TYPE -->
+
+                <div class="form-group">
+
+                    <label>Transaction Type</label>
+
+                    <select name="type">
+
+                        <option value="all"
+                            {% if selected_type == "all" %}selected{% endif %}>
+                            All Transactions
+                        </option>
+
+                        <option value="sale"
+                            {% if selected_type == "sale" %}selected{% endif %}>
+                            Sales
+                        </option>
+
+                        <option value="purchase"
+                            {% if selected_type == "purchase" %}selected{% endif %}>
+                            Purchases
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- EMPLOYEE -->
+
+                <div class="form-group">
+
+                    <label>Employee</label>
+
+                    <select name="employee">
+
+                        <option value="">
+                            All Employees
+                        </option>
+
+                        {% for employee in employees %}
+
+                            <option
+                                value="{{ employee.id }}"
+                                {% if selected_employee|stringformat:"s" == employee.id|stringformat:"s" %}
+                                    selected
+                                {% endif %}
+                            >
+
+                                {{ employee.username }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+
+                <!-- BUTTON -->
+
+                <div class="form-group">
+
+                    <label>&nbsp;</label>
+
+                    <button
+                        type="submit"
+                        class="report-button">
+
+                        Apply Filters
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- =================================================
+         SUMMARY
+    ================================================== -->
+
+    <div class="summary-grid">
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Sales Transactions
+            </div>
+
+            <div class="summary-value">
+                {{ sales_count }}
+            </div>
+
+            <div class="summary-note">
+                Selected period
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Sales Revenue
+            </div>
+
+            <div class="summary-value">
+                {{ sales_revenue|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                Total sales
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Purchase Value
+            </div>
+
+            <div class="summary-value">
+                {{ purchases_value|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                Total purchases
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Units Sold
+            </div>
+
+            <div class="summary-value">
+                {{ total_sales_units }}
+            </div>
+
+            <div class="summary-note">
+                Products sold
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Current Stock
+            </div>
+
+            <div class="summary-value">
+                {{ total_stock }}
+            </div>
+
+            <div class="summary-note">
+                Units available
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Low Stock
+            </div>
+
+            <div class="summary-value negative">
+                {{ low_stock_count }}
+            </div>
+
+            <div class="summary-note">
+                Products need attention
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =================================================
+         FINANCIAL SUMMARY
+    ================================================== -->
+
+    <div class="summary-grid">
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Cost of Goods Sold
+            </div>
+
+            <div class="summary-value">
+                {{ cogs|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                Recorded purchase cost
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Gross Profit
+            </div>
+
+            <div class="summary-value {% if gross_profit < 0 %}negative{% else %}positive{% endif %}">
+                {{ gross_profit|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                Sales revenue &minus; COGS ({{ gross_margin|floatformat:1 }}% margin)
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Total Expenses
+            </div>
+
+            <div class="summary-value negative">
+                {{ total_expenses|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                {{ expense_count }} expense{{ expense_count|pluralize }} recorded
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Net Profit
+            </div>
+
+            <div class="summary-value {% if operating_profit < 0 %}negative{% else %}positive{% endif %}">
+                {{ operating_profit|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                Gross profit &minus; expenses
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Owner Withdrawals
+            </div>
+
+            <div class="summary-value negative">
+                {{ owner_withdrawals|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                {{ withdrawal_count }} withdrawal{{ withdrawal_count|pluralize }} &middot; shown separately from expenses
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Cash Remaining After Withdrawals
+            </div>
+
+            <div class="summary-value {% if net_profit < 0 %}negative{% else %}positive{% endif %}">
+                {{ net_profit|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                Net profit &minus; owner withdrawals
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Total Purchases
+            </div>
+
+            <div class="summary-value">
+                {{ purchases_count }}
+            </div>
+
+            <div class="summary-note">
+                {{ total_purchase_units }} units purchased
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Out of Stock
+            </div>
+
+            <div class="summary-value negative">
+                {{ out_of_stock_count }}
+            </div>
+
+            <div class="summary-note">
+                Products with zero stock
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-label">
+                Total Stock Value
+            </div>
+
+            <div class="summary-value">
+                {{ total_stock_value|floatformat:2 }} RWF
+            </div>
+
+            <div class="summary-note">
+                {{ total_products }} products &middot; latest recorded cost
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =================================================
+         CHARTS
+    ================================================== -->
+
+    <div class="report-grid">
+
+
+        <!-- DAILY SALES GRAPH -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Sales Performance</h3>
+
+                <span>
+                    {{ selected_period_name }}
+                </span>
+
+            </div>
+
+
+            <div class="graph-container">
+
+                <div class="graph">
+
+                    {% if daily_sales_chart %}
+
+                        {% for day in daily_sales_chart %}
+
+                            <div class="graph-column">
+
+                                <div
+                                    class="graph-bar"
+                                    style="
+                                        height:
+                                        {% widthratio day.revenue sales_revenue 100 %}%;
+                                    "
+                                    title="{{ day.revenue }} RWF">
+                                </div>
+
+                                <div class="graph-label">
+                                    {{ day.date }}
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <p>
+                            No sales data for this period.
+                        </p>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SALES VS PURCHASES -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Sales vs Purchases</h3>
+
+                <span>
+                    Financial activity
+                </span>
+
+            </div>
+
+
+            <div class="chart-row">
+
+                <div class="chart-info">
+
+                    <span>Sales Revenue</span>
+
+                    <strong>
+                        {{ sales_revenue|floatformat:2 }} RWF
+                    </strong>
+
+                </div>
+
+                <div class="bar-background">
+
+                    <div
+                        class="bar"
+                        style="
+                            width:
+                            {% widthratio sales_revenue sales_revenue|add:purchases_value 100 %}%;
+                        ">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-row">
+
+                <div class="chart-info">
+
+                    <span>Purchase Value</span>
+
+                    <strong>
+                        {{ purchases_value|floatformat:2 }} RWF
+                    </strong>
+
+                </div>
+
+                <div class="bar-background">
+
+                    <div
+                        class="bar"
+                        style="
+                            width:
+                            {% widthratio purchases_value sales_revenue|add:purchases_value 100 %}%;
+                        ">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TOP SELLING PRODUCTS -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Best-Selling Products</h3>
+
+                <span>
+                    Units sold
+                </span>
+
+            </div>
+
+
+            {% for product in top_products %}
+
+                <div class="chart-row">
+
+                    <div class="chart-info">
+
+                        <span>
+                            {{ product.name }}
+                        </span>
+
+                        <strong>
+                            {{ product.quantity }}
+                        </strong>
+
+                    </div>
+
+                    <div class="bar-background">
+
+                        <div
+                            class="bar"
+                            style="
+                                width:
+                                {{ product.percentage }}%;
+                            ">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% empty %}
+
+                <p>
+                    No sales data available.
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- EMPLOYEE PERFORMANCE -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Employee Performance</h3>
+
+                <span>
+                    Sales revenue
+                </span>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table class="report-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Employee</th>
+                            <th>Sales</th>
+                            <th>Units</th>
+                            <th>Revenue</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in employee_performance %}
+
+                            <tr>
+
+                                <td>
+                                    {{ item.employee.username }}
+                                </td>
+
+                                <td>
+                                    {{ item.sales_count }}
+                                </td>
+
+                                <td>
+                                    {{ item.units }}
+                                </td>
+
+                                <td>
+                                    {{ item.revenue|floatformat:2 }}
+                                    RWF
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+                                <td colspan="4">
+                                    No employee sales data.
+                                </td>
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRODUCT PERFORMANCE -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Product Performance</h3>
+
+                <span>
+                    Sales overview
+                </span>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table class="report-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Product</th>
+                            <th>Sold</th>
+                            <th>Revenue</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for product in product_performance %}
+
+                            <tr>
+
+                                <td>
+
+                                    <span class="product-badge">
+                                        {{ product.name }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+                                    {{ product.sold }}
+                                </td>
+
+                                <td>
+                                    {{ product.revenue|floatformat:2 }}
+                                    RWF
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="3">
+                                    No product sales data.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- STOCK OVERVIEW -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Stock Overview</h3>
+
+                <span>
+                    Current inventory
+                </span>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table class="report-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Product</th>
+                            <th>Purchased</th>
+                            <th>Sold</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in stock_data %}
+
+                            <tr>
+
+                                <td>
+                                    {{ item.product.item_name }}
+                                </td>
+
+                                <td>
+                                    {{ item.purchased }}
+                                </td>
+
+                                <td>
+                                    {{ item.sold }}
+                                </td>
+
+                                <td>
+                                    {{ item.stock }}
+                                </td>
+
+                                <td>
+
+                                    {% if item.stock <= 0 %}
+
+                                        <span class="negative">
+                                            Out of Stock
+                                        </span>
+
+                                    {% elif item.stock <= 10 %}
+
+                                        <span class="negative">
+                                            Low
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="positive">
+                                            Good
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="5">
+                                    No products found.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+
+        <!-- SLOW MOVING -->
+
+        <div class="report-card">
+
+            <div class="report-card-header">
+
+                <h3>Slow-Moving Products</h3>
+
+                <span>
+                    Stock with little/no sales
+                </span>
+
+            </div>
+
+
+            <div class="table-container">
+
+                <table class="report-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Product</th>
+                            <th>Stock</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for item in slow_products %}
+
+                            <tr>
+
+                                <td>
+                                    {{ item.product.item_name }}
+                                </td>
+
+                                <td>
+                                    {{ item.stock }}
+                                </td>
+
+                            </tr>
+
+                        {% empty %}
+
+                            <tr>
+
+                                <td colspan="2">
+                                    No slow-moving products.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         TRANSACTIONS
+    ================================================== -->
+
+    <div class="report-card">
+
+        <div class="report-card-header">
+
+            <h3>Recent Transactions</h3>
+
+            <span>
+                Latest 20 transactions
+            </span>
+
+        </div>
+
+
+        <div class="table-container">
+
+            <table class="report-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Employee</th>
+                        <th>Amount</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for transaction in transactions %}
+
+                        <tr>
+
+                            <td>
+                                {{ transaction.date|date:"d M Y H:i" }}
+                            </td>
+
+                            <td>
+
+                                {% if transaction.type == "Sale" %}
+
+                                    <span class="positive">
+                                        Sale
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="negative">
+                                        Purchase
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+                                {{ transaction.product }}
+                            </td>
+
+                            <td>
+                                {{ transaction.quantity }}
+                            </td>
+
+                            <td>
+                                {{ transaction.employee }}
+                            </td>
+
+                            <td>
+                                {{ transaction.amount|floatformat:2 }}
+                                RWF
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="6">
+                                No transactions found.
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         REPORT INFORMATION
+    ================================================== -->
+
+    <div class="report-footer">
+
+        <strong>
+            Report period:
+        </strong>
+
+        {{ selected_period_name }}
+
+        — Current stock is calculated from the shop's complete
+        purchase and sales history.
+
+    </div>
+
+</div>
+
+{% endblock %}

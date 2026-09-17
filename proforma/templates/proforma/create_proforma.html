@@ -1,0 +1,253 @@
+{% extends "users/base.html" %}
+
+{% block title %}New Proforma | Shop Management System{% endblock %}
+
+{% block page_title %}New Proforma{% endblock %}
+
+{% block extra_css %}
+<style>
+
+    .proforma-form-wrapper {
+        max-width: 900px;
+    }
+
+    .proforma-form-wrapper .card {
+        margin-bottom: 20px;
+    }
+
+    .proforma-form-wrapper label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        margin-top: 14px;
+    }
+
+    .proforma-form-wrapper input,
+    .proforma-form-wrapper select,
+    .proforma-form-wrapper textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        background: white;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    .items-table th {
+        text-align: left;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: #6b7280;
+        padding: 8px 6px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .items-table td {
+        padding: 6px;
+        vertical-align: top;
+    }
+
+    .items-table input {
+        margin: 0;
+    }
+
+    .errorlist {
+        color: #dc2626;
+        font-size: 12px;
+        margin: 4px 0 0;
+        padding-left: 16px;
+    }
+
+    .form-actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 12px;
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="proforma-form-wrapper">
+
+    <div class="card">
+
+        <h3>Client &amp; Proforma Details</h3>
+
+        <form method="POST" id="proforma-form">
+
+            {% csrf_token %}
+
+            {{ formset.management_form }}
+
+            <div class="form-row">
+
+                <div>
+                    <label>Client Name</label>
+                    {{ form.client_name }}
+                    {{ form.client_name.errors }}
+                </div>
+
+                <div>
+                    <label>Client Phone</label>
+                    {{ form.client_phone }}
+                    {{ form.client_phone.errors }}
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div>
+                    <label>Client Address</label>
+                    {{ form.client_address }}
+                    {{ form.client_address.errors }}
+                </div>
+
+                <div>
+                    <label>Client Email</label>
+                    {{ form.client_email }}
+                    {{ form.client_email.errors }}
+                </div>
+
+            </div>
+
+            <label>Purpose (what this proforma is for)</label>
+            {{ form.purpose }}
+            {{ form.purpose.errors }}
+
+            <div class="form-row">
+
+                <div>
+                    <label>Date</label>
+                    {{ form.date }}
+                    {{ form.date.errors }}
+                </div>
+
+                <div>
+                    <label>Valid Until (leave blank for +14 days)</label>
+                    {{ form.valid_until }}
+                    {{ form.valid_until.errors }}
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div>
+                    <label>Tax Rate (%)</label>
+                    {{ form.tax_rate }}
+                    {{ form.tax_rate.errors }}
+                </div>
+
+                <div>
+                    <label>Other Costs (RWF)</label>
+                    {{ form.other_costs }}
+                    {{ form.other_costs.errors }}
+                </div>
+
+                <div>
+                    <label>Other Costs Description</label>
+                    {{ form.other_costs_description }}
+                    {{ form.other_costs_description.errors }}
+                </div>
+
+            </div>
+
+            <label>Status</label>
+            {{ form.status }}
+            {{ form.status.errors }}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <h3 style="margin-top: 25px;">Items</h3>
+
+            {% if formset.non_form_errors %}
+                <div class="alert alert-error">
+                    {{ formset.non_form_errors }}
+                </div>
+            {% endif %}
+
+            <table class="items-table">
+
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="width: 90px;">Qty</th>
+                        <th style="width: 140px;">Rate (RWF)</th>
+                        {% if formset.can_delete %}<th style="width: 60px;">Remove</th>{% endif %}
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item_form in formset %}
+
+                        <tr>
+
+                            <td>
+                                {{ item_form.id }}
+                                {{ item_form.description }}
+                                {{ item_form.description.errors }}
+                            </td>
+
+                            <td>
+                                {{ item_form.quantity }}
+                                {{ item_form.quantity.errors }}
+                            </td>
+
+                            <td>
+                                {{ item_form.rate }}
+                                {{ item_form.rate.errors }}
+                            </td>
+
+                            {% if formset.can_delete %}
+                                <td style="text-align:center;">
+                                    {{ item_form.DELETE }}
+                                </td>
+                            {% endif %}
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            <div class="form-actions">
+
+                <button type="submit" class="btn btn-success">
+                    Save Proforma
+                </button>
+
+                <a href="{% url 'proforma_list' %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
