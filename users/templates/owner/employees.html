@@ -1,0 +1,92 @@
+{% extends "users/base.html" %}
+
+{% block title %}Employees{% endblock %}
+
+{% block page_title %}Employees{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Employees</h1>
+        <p>Manage your shop employees.</p>
+    </div>
+
+    <a href="{% url 'create_employee' %}" class="btn btn-primary">
+        + Add Employee
+    </a>
+
+</div>
+
+<div class="card">
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for employee in employees %}
+
+                <tr>
+
+                    <td>{{ employee.username }}</td>
+
+                    <td>
+                        {{ employee.first_name }}
+                        {{ employee.last_name }}
+                    </td>
+
+                    <td>
+                        {{ employee.email|default:"-" }}
+                    </td>
+
+                    <td>
+                        {% if employee.is_active %}
+                            Active
+                        {% else %}
+                            Inactive
+                        {% endif %}
+                    </td>
+
+                    <td>
+                       <a
+    href="{% url 'owner_employee_detail' employee.id %}"
+    class="btn btn-primary"
+>
+    View
+</a>
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+                    <td colspan="5">
+                        No employees found.
+                    </td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

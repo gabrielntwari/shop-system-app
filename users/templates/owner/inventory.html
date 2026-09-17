@@ -1,0 +1,163 @@
+{% extends "users/base.html" %}
+
+{% block title %}Inventory{% endblock %}
+
+{% block page_title %}Inventory{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <p>Monitor products and available stock.</p>
+    </div>
+
+    <a href="{% url 'add_product' %}" class="btn btn-primary">
+        + Add Product
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>Product</th>
+                    <th>Brand</th>
+                    <th>Specification</th>
+                    <th>Source</th>
+                    <th>Minimum Selling Price</th>
+                    <th>Current Stock</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for product in products %}
+
+                <tr>
+
+                    <td>
+                        {{ product.item_name }}
+                    </td>
+
+                    <td>
+                        {% if product.brand %}
+                            {{ product.brand }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if product.specification %}
+                            {{ product.specification }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ product.get_source_display }}
+                    </td>
+
+                    <td>
+                        {{ product.minimum_selling_price }} RWF
+                    </td>
+
+                    <td>
+                        {{ product.current_stock }}
+                    </td>
+
+                    <td>
+
+                        {% if product.is_new %}
+
+                            <span class="new-badge">
+                                NEW
+                            </span>
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="{% url 'update_product' product.id %}"
+                            class="update-btn"
+                        >
+                            Update
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="8">
+                        No products available.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<style>
+
+.update-btn {
+    display: inline-block;
+    padding: 8px 14px;
+    background: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.update-btn:hover {
+    background: #1d4ed8;
+}
+
+
+.new-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background: #dcfce7;
+    color: #15803d;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+</style>
+
+{% endblock %}

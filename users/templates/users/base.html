@@ -1,0 +1,321 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}Shop Management System{% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {% block extra_css %}
+    {% endblock %}
+</head>
+<style>
+
+    /* =====================================================
+       DEVELOPER / CONTACT FOOTER
+    ===================================================== */
+
+    .site-footer {
+        margin-top: 50px;
+        padding: 35px 25px 0;
+        background: #080808;
+        color: #0d0419;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .footer-content h3 {
+        margin: 0 0 10px;
+        font-size: 20px;
+    }
+
+    .footer-content p {
+        margin: 0 auto 25px;
+        max-width: 650px;
+        color: #93c5fd;
+        line-height: 1.6;
+    }
+
+    .footer-contact {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 25px;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+
+    .footer-contact span {
+        color: #e5e7eb;
+    }
+
+    .footer-contact strong {
+        color: #ffffff;
+    }
+
+    .footer-contact a {
+        color: #93c5fd;
+        text-decoration: none;
+    }
+
+    .footer-contact a:hover {
+        text-decoration: underline;
+    }
+
+    .footer-bottom {
+        padding: 18px 10px;
+        border-top: 1px solid #374151;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+
+        .site-footer {
+            padding: 30px 15px 0;
+        }
+
+        .footer-contact {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+    }
+
+</style>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================
+         TOP NAVIGATION
+    ========================== -->
+
+    <header class="topbar">
+
+        <!-- BRAND -->
+        <div class="brand">
+
+            <img
+                src="{% static 'images/gnt_partners_icon.png' %}"
+                alt="GNT Partners Ltd"
+                style="height: 44px; width: auto; object-fit: contain;">
+
+            <div class="logo-text">
+                <strong>GNT Partners</strong>
+                <span>Connecting Global Markets</span>
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="navigation">
+
+            <a href="{% url 'dashboard' %}" class="nav-link">
+                <span>⌂</span>
+                Dashboard
+            </a>
+
+
+            {% if request.user.groups.all.0.name == "owner" %}
+
+                <a href="{% url 'owner_inventory' %}" class="nav-link">
+                    <span>▣</span>
+                    Inventory
+                </a>
+
+                <a href="{% url 'owner_transactions' %}" class="nav-link">
+                    <span>↔</span>
+                    Transactions
+                </a>
+
+                <a href="{% url 'owner_employees' %}" class="nav-link">
+                    <span>♙</span>
+                    Employees
+                </a>
+
+              <a href="{% url 'owner_reports' %}" class="nav-link">
+    <span>▥</span>
+    Reports
+</a>
+
+                <a href="{% url 'proforma_list' %}" class="nav-link">
+                    <span>▤</span>
+                    Proforma
+                </a>
+
+            {% elif request.user.groups.all.0.name == "employee" %}
+
+                <a href="{% url 'employee_transactions' %}" class="nav-link">
+                    <span>↔</span>
+                    My Transactions
+                </a>
+
+                <a href="{% url 'proforma_list' %}" class="nav-link">
+                    <span>▤</span>
+                    Proforma
+                </a>
+
+                <a href="{% url 'employee_profile' %}" class="nav-link">
+                    <span>♙</span>
+                    My Profile
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+
+        <!-- USER AREA -->
+
+        <div class="user-area">
+
+            <div class="user-avatar">
+                {{ request.user.username|first|upper }}
+            </div>
+
+            <div class="user-info">
+
+                <strong>
+                    {% if request.user.get_full_name %}
+                        {{ request.user.get_full_name }}
+                    {% else %}
+                        {{ request.user.username }}
+                    {% endif %}
+                </strong>
+
+                <span>
+                    {% if request.user.groups.all.0.name == "owner" %}
+                        Owner
+                    {% elif request.user.groups.all.0.name == "employee" %}
+                        Employee
+                    {% else %}
+                        User
+                    {% endif %}
+                </span>
+
+            </div>
+
+            <a href="{% url 'logout' %}"
+               class="logout-link"
+               id="logoutLink">
+                Logout
+            </a>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================== -->
+
+    <main class="main">
+
+        <!-- PAGE TITLE -->
+
+        <div class="page-title-bar">
+
+            <h1>
+                {% block page_title %}
+                    Dashboard
+                {% endblock %}
+            </h1>
+
+        </div>
+
+
+        <!-- PAGE CONTENT -->
+
+        <section class="content">
+
+            {% if messages %}
+
+                {% for message in messages %}
+
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+
+            {% block content %}
+            {% endblock %}
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script src="{% static 'js/main.js' %}"></script>
+
+{% block extra_js %}
+{% endblock %}
+
+</body>
+<!-- =====================================================
+     DEVELOPER / CONTACT FOOTER
+===================================================== -->
+
+<footer class="site-footer">
+
+    <div class="footer-content">
+         <p> if you need any other system contacts are below</p>
+        
+
+        <div class="footer-contact">
+
+            <span >
+                <strong>Developer:</strong>
+                <p>NTWARI Modeste Avemaria</p>
+            </span>
+
+            <span>
+                <strong>Email:</strong>
+                <a href="mailto:modetse.avemaria@gmail.com">
+                    modetse.avemaria@gmail.com
+                </a>
+            </span>
+
+            <span>
+                <strong>Phone:</strong>
+                <a href="tel:+250795538741">
+                    +250 795 538 741
+                </a>
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+
+        © {% now "Y" %} NTWARI Modeste Avemaria.
+        All rights reserved.
+
+    </div>
+
+</footer>
+</html>

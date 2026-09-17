@@ -1,0 +1,159 @@
+{% extends "users/base.html" %}
+
+{% block title %}Update Product{% endblock %}
+
+{% block page_title %}Update Product{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Update Product</h1>
+
+        <p>
+            Update product information and minimum selling price.
+        </p>
+    </div>
+
+</div>
+
+
+<div class="card">
+
+    {% if form.non_field_errors %}
+
+        <div class="form-errors">
+            {{ form.non_field_errors }}
+        </div>
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        {% for field in form %}
+
+            <div class="form-group">
+
+                {{ field.label_tag }}
+
+                {{ field }}
+
+                {% if field.errors %}
+                    {{ field.errors }}
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+
+        <div class="buttons">
+
+            <a
+                href="{% url 'owner_inventory' %}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Save Changes
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<style>
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.errorlist {
+    color: #dc2626;
+    margin-top: 6px;
+    list-style: none;
+}
+
+.form-errors {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+</style>
+
+{% endblock %}

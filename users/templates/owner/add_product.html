@@ -1,0 +1,210 @@
+{% extends "users/base.html" %}
+
+{% block title %}Add Product{% endblock %}
+
+{% block page_title %}Add Product{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <p>
+            Add a new product to your shop inventory.
+        </p>
+    </div>
+
+</div>
+
+
+<div class="card form-card">
+
+    <div class="page-header">
+
+        <div>
+            <h2>Product Information</h2>
+
+            <p>
+                Enter the details of the new product.
+            </p>
+        </div>
+
+    </div>
+
+
+    {% if form.non_field_errors %}
+
+        <div class="alert alert-error">
+
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <!-- PRODUCT NAME -->
+
+        <div class="form-group">
+
+            <label  for="{{ form.item_name.id_for_label }}">
+                Product Name
+            </label>
+
+            {{ form.item_name }}
+
+            {% if form.item_name.errors %}
+
+                <div class="field-error">
+
+                    {% for error in form.item_name.errors %}
+                        {{ error }}
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- BRAND -->
+
+        <div class="form-group">
+
+            <label for="{{ form.brand.id_for_label }}">
+                Brand
+            </label>
+
+            {{ form.brand }}
+
+            {% if form.brand.errors %}
+
+                <div class="field-error">
+
+                    {% for error in form.brand.errors %}
+                        {{ error }}
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- SPECIFICATION -->
+
+        <div class="form-group">
+
+            <label for="{{ form.specification.id_for_label }}">
+                Specification
+            </label>
+
+            {{ form.specification }}
+
+            {% if form.specification.errors %}
+
+                <div class="field-error">
+
+                    {% for error in form.specification.errors %}
+                        {{ error }}
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+       <!-- MINIMUM SELLING PRICE -->
+
+<div class="form-group">
+
+    <label for="{{ form.minimum_selling_price.id_for_label }}">
+        Minimum Selling Price
+    </label>
+
+    {{ form.minimum_selling_price }}
+
+    <small class="form-help">
+        The lowest price allowed when selling this product.
+    </small>
+
+    {% if form.minimum_selling_price.errors %}
+
+        <div class="field-error">
+
+            {% for error in form.minimum_selling_price.errors %}
+                {{ error }}
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+        <!-- SOURCE -->
+
+        <div class="form-group">
+
+            <label for="{{ form.source.id_for_label }}">
+                Product Source
+            </label>
+
+            {{ form.source }}
+
+            <small class="form-help">
+                Select whether the product is from your own stock
+                or an external supplier.
+            </small>
+
+            {% if form.source.errors %}
+
+                <div class="field-error">
+
+                    {% for error in form.source.errors %}
+                        {{ error }}
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="form-actions">
+
+            <a
+                href="{% url 'owner_inventory' %}"
+                class="btn btn-secondary"
+            >
+                Cancel
+            </a>
+
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                + Add Product
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

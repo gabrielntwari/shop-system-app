@@ -1,0 +1,359 @@
+{% extends "users/base.html" %}
+
+{% block title %}Employee Details{% endblock %}
+
+{% block page_title %}Employee Details{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>
+            {{ employee.first_name }}
+            {{ employee.last_name }}
+        </h1>
+
+        <p>
+            Employee account and activity overview.
+        </p>
+    </div>
+
+    <a
+        href="{% url 'owner_employees' %}"
+        class="btn btn-secondary"
+    >
+        ← Back to Employees
+    </a>
+
+</div>
+
+
+<!-- =========================
+     EMPLOYEE INFORMATION
+========================= -->
+
+<div class="card">
+
+    <h2>Employee Information</h2>
+
+    <div class="employee-details-grid">
+
+        <div>
+            <span class="detail-label">
+                Full Name
+            </span>
+
+            <strong>
+                {{ employee.first_name }}
+                {{ employee.last_name }}
+            </strong>
+        </div>
+
+
+        <div>
+            <span class="detail-label">
+                Username
+            </span>
+
+            <strong>
+                {{ employee.username }}
+            </strong>
+        </div>
+
+
+        <div>
+            <span class="detail-label">
+                Email
+            </span>
+
+            <strong>
+                {{ employee.email|default:"Not provided" }}
+            </strong>
+        </div>
+
+
+        <div>
+            <span class="detail-label">
+                Status
+            </span>
+
+            {% if employee.is_active %}
+
+                <span class="status-active">
+                    Active
+                </span>
+
+            {% else %}
+
+                <span class="status-inactive">
+                    Inactive
+                </span>
+
+            {% endif %}
+
+        </div>
+
+
+        <div>
+            <span class="detail-label">
+                Date Joined
+            </span>
+
+            <strong>
+                {{ employee.date_joined|date:"d M Y" }}
+            </strong>
+        </div>
+
+
+        <div>
+            <span class="detail-label">
+                Last Login
+            </span>
+
+            <strong>
+                {% if employee.last_login %}
+                    {{ employee.last_login|date:"d M Y, H:i" }}
+                {% else %}
+                    Never
+                {% endif %}
+            </strong>
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     ACTIVITY SUMMARY
+========================= -->
+
+<div class="stats-grid">
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Today's Sales
+        </span>
+
+        <span class="stat-value">
+            {{ today_sales_count }}
+        </span>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Today's Purchases
+        </span>
+
+        <span class="stat-value">
+            {{ today_purchases_count }}
+        </span>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Total Transactions
+        </span>
+
+        <span class="stat-value">
+            {{ transaction_count }}
+        </span>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Today's Sales Value
+        </span>
+
+        <span class="stat-value">
+            {{ today_sales_value }}
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     RECENT TRANSACTIONS
+========================= -->
+
+<div class="card">
+
+    <div class="page-header">
+
+        <div>
+
+            <h2>Recent Transactions</h2>
+
+            <p>
+                Latest transactions recorded by this employee.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for transaction in recent_transactions %}
+
+                <tr>
+
+                    <td>
+                        {{ transaction.date }}
+                    </td>
+
+
+                    <td>
+
+                        {% if transaction.type == "Sale" %}
+
+                            <span class="transaction-sale">
+                                Sale
+                            </span>
+
+                        {% else %}
+
+                            <span class="transaction-purchase">
+                                Purchase
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+                        {{ transaction.product }}
+                    </td>
+
+
+                    <td>
+                        {{ transaction.quantity }}
+                    </td>
+
+
+                    <td>
+                        {{ transaction.amount }}
+                    </td>
+
+                </tr>
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="5">
+                        No transactions found.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .employee-details-grid {
+
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 22px;
+
+        margin-top: 20px;
+    }
+
+
+    .employee-details-grid > div {
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 5px;
+    }
+
+
+    .detail-label {
+
+        font-size: 12px;
+
+        color: var(--muted);
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .status-active {
+
+        color: #15803d;
+
+        font-weight: 600;
+    }
+
+
+    .status-inactive {
+
+        color: #dc2626;
+
+        font-weight: 600;
+    }
+
+
+    @media (max-width: 700px) {
+
+        .employee-details-grid {
+
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+</style>
+
+{% endblock %}

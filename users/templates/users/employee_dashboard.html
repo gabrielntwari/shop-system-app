@@ -1,0 +1,251 @@
+{% extends "users/base.html" %}
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block page_title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h1>
+            Welcome,
+            {{ request.user.first_name|default:request.user.username }}
+        </h1>
+
+    <p>
+        Here's your work summary.
+    </p>
+</div>
+
+</div>
+
+<!-- =========================
+     TODAY'S SUMMARY
+========================= -->
+
+<div class="stats-grid">
+
+<div class="card stat-card">
+    <span class="stat-label">
+        Today's Total Sales
+    </span>
+
+    <span class="stat-value">
+        {{ sales_revenue|default:"0" }} RWF
+    </span>
+
+    <p>
+        {{ today_sales|default:"0" }} transactions
+    </p>
+</div>
+
+
+<div class="card stat-card">
+    <span class="stat-label">
+        Today's Total Purchases
+    </span>
+
+    <span class="stat-value">
+        {{ purchases_value|default:"0" }} RWF
+    </span>
+
+    <p>
+        {{ today_purchases|default:"0" }} transactions
+    </p>
+</div>
+
+
+<div class="card stat-card">
+    <span class="stat-label">
+        This Week's Sales
+    </span>
+
+    <span class="stat-value">
+        {{ weekly_sales|default:"0" }}
+    </span>
+
+    <p>
+        transactions
+    </p>
+</div>
+
+
+<div class="card stat-card">
+    <span class="stat-label">
+        My Transactions
+    </span>
+
+    <span class="stat-value">
+        {{ transaction_count|default:"0" }}
+    </span>
+</div>
+
+</div>
+
+<!-- =========================
+     CREDIT SUMMARY
+========================= -->
+
+<div class="page-header">
+
+<div>
+    <h2>My Credit Transactions</h2>
+
+    <p>
+        Manage credit sales and purchases you recorded.
+    </p>
+</div>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="card stat-card">
+
+    <span class="stat-label">
+        Customer Credit
+    </span>
+
+    <p>
+        Customers who bought from you on credit.
+    </p>
+
+    <a href="{% url 'employee_sale_credits' %}"
+       class="btn btn-primary">
+        Customer Credits
+    </a>
+
+</div>
+
+
+<div class="card stat-card">
+
+    <span class="stat-label">
+        Supplier Credit
+    </span>
+
+    <p>
+        Purchases you recorded on credit.
+    </p>
+
+    <a href="{% url 'employee_purchase_credits' %}"
+       class="btn btn-success">
+        Supplier Credits
+    </a>
+
+</div>
+
+</div>
+
+<!-- =========================
+     QUICK ACTIONS
+========================= -->
+
+<div class="page-header">
+<a href="{% url 'add_expense' %}" class="btn btn-primary">
+    + Record Expense
+</a>
+
+<a href="{% url 'employee_expenses' %}" class="btn btn-primary">
+    View My Expenses
+</a>
+<div>
+    <h2>Quick Actions</h2>
+</div>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="card">
+
+    <h3>Add Sale</h3>
+
+    <p>
+        Record a new customer sale.
+    </p>
+
+    <br>
+
+    <a href="{% url 'add_sale' %}"
+       class="btn btn-primary">
+        Add Sale
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    <h3>Add Purchase</h3>
+
+    <p>
+        Record goods purchased for the shop.
+    </p>
+
+    <br>
+
+    <a href="{% url 'add_purchase' %}"
+       class="btn btn-success">
+        Add Purchase
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    <h3>Record Expense</h3>
+
+    <p>
+        Record a shop expense or other business cost.
+    </p>
+
+    <br>
+
+    <a href="{% url 'add_expense' %}"
+       class="btn btn-primary">
+        Record Expense
+    </a>
+
+</div>
+
+
+<div class="card">
+
+    <h3>My Expenses</h3>
+
+    <p>
+        View only the expenses you have recorded.
+    </p>
+
+    <br>
+
+   <a href="{% url 'employee_expenses' %}" class="btn btn-primary">
+    View My Expenses
+</a>
+
+</div>
+
+
+<div class="card">
+
+    <h3>My Transactions</h3>
+
+    <p>
+        View your sales and purchases.
+    </p>
+
+    <br>
+
+    <a href="{% url 'employee_transactions' %}"
+       class="btn btn-primary">
+        View Transactions
+    </a>
+
+</div>
+
+</div>
+
+{% endblock %}

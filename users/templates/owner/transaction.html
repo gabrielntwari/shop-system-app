@@ -1,0 +1,461 @@
+{% extends "users/base.html" %}
+
+{% block title %}All Transactions{% endblock %}
+
+{% block page_title %}All Transactions{% endblock %}
+
+{% block content %}
+
+<!-- =========================================================
+     PAGE HEADER
+========================================================= -->
+
+<div class="page-header">
+
+    <div>
+        <h1>All Transactions</h1>
+
+        <p>
+            View and filter all sales and purchases recorded in the shop.
+        </p>
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     FILTERS
+========================================================= -->
+
+<div class="card transaction-filter-card">
+
+    <form method="GET" class="transaction-filter">
+
+        <!-- PERIOD -->
+
+        <div class="filter-group">
+
+            <label for="period">
+                Period
+            </label>
+
+            <select
+                name="period"
+                id="period"
+                class="form-control"
+            >
+
+                <option value="all"
+                    {% if selected_period == "all" %}selected{% endif %}>
+                    All Transactions
+                </option>
+
+                <option value="today"
+                    {% if selected_period == "today" %}selected{% endif %}>
+                    Today
+                </option>
+
+                <option value="yesterday"
+                    {% if selected_period == "yesterday" %}selected{% endif %}>
+                    Yesterday
+                </option>
+
+                <option value="last_7_days"
+                    {% if selected_period == "last_7_days" %}selected{% endif %}>
+                    Last 7 Days
+                </option>
+
+                <option value="this_month"
+                    {% if selected_period == "this_month" %}selected{% endif %}>
+                    This Month
+                </option>
+
+                <option value="last_month"
+                    {% if selected_period == "last_month" %}selected{% endif %}>
+                    Last Month
+                </option>
+
+                <option value="this_year"
+                    {% if selected_period == "this_year" %}selected{% endif %}>
+                    This Year
+                </option>
+
+                <option value="last_year"
+                    {% if selected_period == "last_year" %}selected{% endif %}>
+                    Last Year
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- EMPLOYEE -->
+
+        <div class="filter-group">
+
+            <label for="employee">
+                Employee
+            </label>
+
+            <select
+                name="employee"
+                id="employee"
+                class="form-control"
+            >
+
+                <option value="">
+                    All Employees
+                </option>
+
+                {% for employee in employees %}
+
+                    <option
+                        value="{{ employee.id }}"
+                        {% if selected_employee|stringformat:"s" == employee.id|stringformat:"s" %}
+                            selected
+                        {% endif %}
+                    >
+
+                        {% if employee.get_full_name %}
+                            {{ employee.get_full_name }}
+                        {% else %}
+                            {{ employee.username }}
+                        {% endif %}
+
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <!-- TRANSACTION TYPE -->
+
+        <div class="filter-group">
+
+            <label for="type">
+                Transaction Type
+            </label>
+
+            <select
+                name="type"
+                id="type"
+                class="form-control"
+            >
+
+                <option value="all"
+                    {% if selected_type == "all" %}selected{% endif %}>
+                    All Types
+                </option>
+
+                <option value="sale"
+                    {% if selected_type == "sale" %}selected{% endif %}>
+                    Sales
+                </option>
+
+                <option value="purchase"
+                    {% if selected_type == "purchase" %}selected{% endif %}>
+                    Purchases
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- PAYMENT STATUS -->
+
+        <div class="filter-group">
+
+            <label for="payment_status">
+                Payment Status
+            </label>
+
+            <select
+                name="payment_status"
+                id="payment_status"
+                class="form-control"
+            >
+
+                <option value="all"
+                    {% if selected_payment_status == "all" %}selected{% endif %}>
+                    All Statuses
+                </option>
+
+                <option value="paid"
+                    {% if selected_payment_status == "paid" %}selected{% endif %}>
+                    Paid
+                </option>
+
+                <option value="credit"
+                    {% if selected_payment_status == "credit" %}selected{% endif %}>
+                    Credit
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- PAYMENT METHOD -->
+
+        <div class="filter-group">
+
+            <label for="payment_method">
+                Payment Method
+            </label>
+
+            <select
+                name="payment_method"
+                id="payment_method"
+                class="form-control"
+            >
+
+                <option value="all"
+                    {% if selected_payment_method == "all" %}selected{% endif %}>
+                    All Methods
+                </option>
+
+                <option value="cash"
+                    {% if selected_payment_method == "cash" %}selected{% endif %}>
+                    Cash
+                </option>
+
+                <option value="mobile_money"
+                    {% if selected_payment_method == "mobile_money" %}selected{% endif %}>
+                    Mobile Money
+                </option>
+
+                <option value="bank"
+                    {% if selected_payment_method == "bank" %}selected{% endif %}>
+                    Bank
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="filter-buttons">
+
+            <button
+                type="submit"
+                class="btn btn-primary"
+            >
+                Apply Filter
+            </button>
+
+            <a
+                href="{% url 'owner_transactions' %}"
+                class="btn btn-secondary"
+            >
+                Clear
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+<!-- =========================================================
+     TRANSACTIONS
+========================================================= -->
+
+<div class="card">
+
+    <div class="page-header">
+
+        <div>
+            <h2>Transaction History</h2>
+
+            <p>
+                Complete record of shop activity.
+            </p>
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+
+                    <th>Type</th>
+
+                    <th>Product</th>
+
+                    <th>Quantity</th>
+
+                    <th>Employee</th>
+
+                    <th>Amount</th>
+
+                    <th>Payment Status</th>
+
+                    <th>Payment Method</th>
+
+                    <th>Customer / Supplier</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for transaction in transactions %}
+
+                <tr>
+
+                    <!-- DATE -->
+
+                    <td>
+                        {{ transaction.date|date:"M d, Y, g:i A" }}
+                    </td>
+
+
+                    <!-- TYPE -->
+
+                    <td>
+
+                        {% if transaction.type == "Sale" %}
+
+                            <span class="transaction-sale">
+                                Sale
+                            </span>
+
+                        {% elif transaction.type == "Purchase" %}
+
+                            <span class="transaction-purchase">
+                                Purchase
+                            </span>
+
+                        {% else %}
+
+                            {{ transaction.type }}
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- PRODUCT -->
+
+                    <td>
+                        {{ transaction.product }}
+                    </td>
+
+
+                    <!-- QUANTITY -->
+
+                    <td>
+                        {{ transaction.quantity }}
+                    </td>
+
+
+                    <!-- EMPLOYEE -->
+
+                    <td>
+                        {{ transaction.employee }}
+                    </td>
+
+
+                    <!-- AMOUNT -->
+
+                    <td>
+                        {{ transaction.amount }}
+                    </td>
+
+
+                    <!-- PAYMENT STATUS -->
+
+                    <td>
+
+                        {% if transaction.payment_status == "Paid" %}
+
+                            <span class="payment-paid">
+                                Paid
+                            </span>
+
+                        {% elif transaction.payment_status == "Credit" %}
+
+                            <span class="payment-credit">
+                                Credit
+                            </span>
+
+                        {% else %}
+
+                            {{ transaction.payment_status }}
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- PAYMENT METHOD -->
+
+                    <td>
+                        {{ transaction.payment_method }}
+                    </td>
+
+
+                    <!-- CUSTOMER / SUPPLIER -->
+
+                    <td>
+
+                        {% if transaction.type == "Sale" %}
+
+                            {{ transaction.customer|default:"-" }}
+
+                        {% elif transaction.type == "Purchase" %}
+
+                            {{ transaction.supplier|default:"-" }}
+
+                        {% else %}
+
+                            -
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="9">
+
+                        No transactions found for the selected filters.
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}
+

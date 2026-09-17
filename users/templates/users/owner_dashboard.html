@@ -1,0 +1,732 @@
+{% extends "users/base.html" %}
+
+{% block title %}Owner Dashboard{% endblock %}
+
+{% block page_title %}Owner Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<div class="page-header">
+
+    <div>
+        <h1>
+            Welcome,
+            {{ request.user.first_name|default:request.user.username }}
+        </h1>
+
+        <p>
+            Here's what's happening in your shop.
+        </p>
+    </div>
+
+    <a href="{% url 'create_employee' %}" class="btn btn-primary">
+        + Add Employee
+    </a>
+
+</div>
+
+
+<!-- =========================
+     SHOP SUMMARY
+========================= -->
+
+<div class="stats-grid">
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Total Products
+        </span>
+
+        <span class="stat-value">
+            {{ total_products|default:"0" }}
+        </span>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Available Stock
+        </span>
+
+        <span class="stat-value">
+            {{ total_stock|default:"0" }}
+        </span>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Employees
+        </span>
+
+        <span class="stat-value">
+            {{ employee_count|default:"0" }}
+        </span>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Inventory Value
+        </span>
+
+        <span class="stat-value">
+            {{ stock_selling_value|default:"0" }} RWF
+        </span>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     TODAY'S SALES
+========================= -->
+
+<div class="page-header">
+
+    <div>
+
+        <h2>
+            Today's Sales
+        </h2>
+
+        <p>
+            Total sales include both paid and credit sales.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="stats-grid">
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Total Sales
+        </span>
+
+        <span class="stat-value">
+            {{ sales_revenue|default:"0" }} RWF
+        </span>
+
+        <p>
+            {{ sales_count|default:"0" }} transactions
+            ·
+            {{ sales_quantity|default:"0" }} units
+        </p>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Paid Sales
+        </span>
+
+        <span class="stat-value credit-paid">
+            {{ paid_sales_revenue|default:"0" }} RWF
+        </span>
+
+        <p>
+            {{ paid_sales_count|default:"0" }} transactions
+        </p>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Credit Sales
+        </span>
+
+        <span class="stat-value credit-outstanding">
+            {{ credit_sales_amount|default:"0" }} RWF
+        </span>
+
+        <p>
+            {{ credit_sales_count|default:"0" }} transactions
+        </p>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Customer Credit Outstanding
+        </span>
+
+        <span class="stat-value credit-outstanding">
+            {{ credit_sales_outstanding|default:"0" }} RWF
+        </span>
+
+        <br>
+
+        <a
+            href="{% url 'owner_sale_credits' %}"
+            class="btn btn-small btn-primary"
+        >
+            Manage Customer Credits
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     TODAY'S PURCHASES
+========================= -->
+
+<div class="page-header">
+
+    <div>
+
+        <h2>
+            Today's Purchases
+        </h2>
+
+        <p>
+            Total purchases include both paid and credit purchases.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="stats-grid">
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Total Purchases
+        </span>
+
+        <span class="stat-value">
+            {{ purchases_value|default:"0" }} RWF
+        </span>
+
+        <p>
+            {{ purchases_count|default:"0" }} transactions
+            ·
+            {{ purchases_quantity|default:"0" }} units
+        </p>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Paid Purchases
+        </span>
+
+        <span class="stat-value credit-paid">
+            {{ paid_purchases_value|default:"0" }} RWF
+        </span>
+
+        <p>
+            {{ paid_purchases_count|default:"0" }} transactions
+        </p>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Credit Purchases
+        </span>
+
+        <span class="stat-value credit-outstanding">
+            {{ credit_purchases_amount|default:"0" }} RWF
+        </span>
+
+        <p>
+            {{ credit_purchases_count|default:"0" }} transactions
+        </p>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Supplier Credit Outstanding
+        </span>
+
+        <span class="stat-value credit-outstanding">
+            {{ credit_purchases_outstanding|default:"0" }} RWF
+        </span>
+
+        <br>
+
+        <a
+            href="{% url 'owner_purchase_credits' %}"
+            class="btn btn-small btn-primary"
+        >
+            Manage Supplier Credits
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     EXPENSE SUMMARY
+========================= -->
+
+<div class="page-header">
+
+    <div>
+
+        <h2>
+            Today's Expenses
+        </h2>
+
+        <p>
+            Monitor money spent by the shop and owner withdrawals.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="stats-grid">
+
+
+    <!-- TOTAL EXPENSES -->
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Total Expenses
+        </span>
+
+        <span class="stat-value">
+            {{ today_expenses|default:"0" }} RWF
+        </span>
+
+        <p>
+            All expenses recorded today.
+        </p>
+
+    </div>
+
+
+    <!-- BUSINESS EXPENSES -->
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Business Expenses
+        </span>
+
+        <span class="stat-value">
+            {{ today_business_expenses|default:"0" }} RWF
+        </span>
+
+        <p>
+            Rent, electricity, transport, salaries, etc.
+        </p>
+
+    </div>
+
+
+    <!-- OWNER WITHDRAWALS -->
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Owner Withdrawals
+        </span>
+
+        <span class="stat-value">
+            {{ today_owner_withdrawals|default:"0" }} RWF
+        </span>
+
+        <p>
+            Money withdrawn by the owner.
+        </p>
+
+    </div>
+
+
+    <!-- VIEW ALL -->
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Expense Records
+        </span>
+
+        <p>
+            View every expense recorded by the owner and employees.
+        </p>
+
+        <a
+            href="{% url 'owner_expenses' %}"
+            class="btn btn-primary"
+        >
+            View All Expenses
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     CREDIT OVERVIEW
+========================= -->
+
+<div class="page-header">
+
+    <div>
+
+        <h2>
+            Credit Overview
+        </h2>
+
+        <p>
+            Outstanding credit across the entire shop.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="stats-grid">
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Customers Owe Shop
+        </span>
+
+        <span class="stat-value credit-outstanding">
+            {{ total_sales_credit_outstanding|default:"0" }} RWF
+        </span>
+
+        <br>
+
+        <a
+            href="{% url 'owner_sale_credits' %}"
+            class="btn btn-small btn-primary"
+        >
+            View Customer Credits
+        </a>
+
+    </div>
+
+
+    <div class="card stat-card">
+
+        <span class="stat-label">
+            Shop Owes Suppliers
+        </span>
+
+        <span class="stat-value credit-outstanding">
+            {{ total_purchase_credit_outstanding|default:"0" }} RWF
+        </span>
+
+        <br>
+
+        <a
+            href="{% url 'owner_purchase_credits' %}"
+            class="btn btn-small btn-primary"
+        >
+            View Supplier Credits
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- =========================
+     QUICK ACTIONS
+========================= -->
+
+<div class="page-header">
+<a href="{% url 'add_expense' %}" class="btn btn-primary">
+    + Record Expense
+</a>
+
+<a href="{% url 'owner_expenses' %}" class="btn btn-secondary">
+    View All Expenses
+</a>
+    <div>
+
+        <h2>
+            Quick Actions
+        </h2>
+
+        <p>
+            Quickly perform common shop management tasks.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="stats-grid">
+
+
+    <!-- ADD EMPLOYEE -->
+
+    <div class="card">
+
+        <h3>
+            Add Employee
+        </h3>
+
+        <p>
+            Create a new employee account.
+        </p>
+
+        <br>
+
+        <a
+            href="{% url 'create_employee' %}"
+            class="btn btn-primary"
+        >
+            Add Employee
+        </a>
+
+    </div>
+
+
+    <!-- ADD PRODUCT -->
+
+    <div class="card">
+
+        <h3>
+            Add Product
+        </h3>
+
+        <p>
+            Add a new product to the inventory.
+        </p>
+
+        <br>
+
+        <a
+            href="{% url 'add_product' %}"
+            class="btn btn-primary"
+        >
+            Add Product
+        </a>
+
+    </div>
+
+
+    <!-- RECORD EXPENSE -->
+
+    <div class="card">
+
+        <h3>
+            Record Expense
+        </h3>
+
+        <p>
+            Record a business expense or owner withdrawal.
+        </p>
+
+        <br>
+
+        <a
+            href="{% url 'add_expense' %}"
+            class="btn btn-primary"
+        >
+            Record Expense
+        </a>
+
+    </div>
+
+
+    <!-- VIEW EXPENSES -->
+
+    <div class="card">
+
+        <h3>
+            Expense Records
+        </h3>
+
+        <p>
+            View and manage all expenses recorded in the shop.
+        </p>
+
+        <br>
+
+        <a
+            href="{% url 'owner_expenses' %}"
+            class="btn btn-primary"
+        >
+            View Expenses
+        </a>
+
+    </div>
+
+
+</div>
+
+
+<!-- =========================
+     RECENT TRANSACTIONS
+========================= -->
+
+<div class="card">
+
+    <div class="page-header">
+
+        <div>
+
+            <h2>
+                Recent Transactions
+            </h2>
+
+            <p>
+                Latest sales and purchases in the shop.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Employee</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for transaction in recent_transactions %}
+
+                <tr>
+
+                    <td>
+                        {{ transaction.date|date:"M d, Y, g:i a" }}
+                    </td>
+
+
+                    <td>
+
+                        {% if transaction.type == "Sale" %}
+
+                            <span class="transaction-sale">
+                                Sale
+                            </span>
+
+                        {% else %}
+
+                            <span class="transaction-purchase">
+                                Purchase
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+                        {{ transaction.product }}
+                    </td>
+
+
+                    <td>
+                        {{ transaction.quantity }}
+                    </td>
+
+
+                    <td>
+                        {{ transaction.amount }} RWF
+                    </td>
+
+
+                    <td>
+
+                        {% if transaction.payment_status == "Credit" %}
+
+                            <span class="credit-status credit-pending">
+                                Credit
+                            </span>
+
+                        {% else %}
+
+                            <span class="credit-status credit-cleared">
+                                Paid
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+                        {{ transaction.employee }}
+                    </td>
+
+                </tr>
+
+
+                {% empty %}
+
+                <tr>
+
+                    <td colspan="7">
+                        No transactions yet.
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+{% endblock %}

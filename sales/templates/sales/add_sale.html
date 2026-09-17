@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Add Sale</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: auto;
+        }
+
+        .header {
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 30px;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .errorlist {
+            color: #dc2626;
+            list-style: none;
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        .form-errors {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>Add Sale</h1>
+        <p>Record a new sale transaction.</p>
+    </div>
+
+    <div class="card">
+
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="form-group">
+
+                    {{ field.label_tag }}
+
+                    {{ field }}
+
+                    {% if field.errors %}
+                        {{ field.errors }}
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+            <div class="buttons">
+
+                <a href="{% url 'dashboard' %}"
+                   class="btn btn-secondary">
+                    Back to Dashboard
+                </a>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Add Sale
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
