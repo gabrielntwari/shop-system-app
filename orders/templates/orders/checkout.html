@@ -1,0 +1,366 @@
+{% extends "users/base.html" %}
+
+{% block title %}Checkout | GNT Partners{% endblock %}
+{% block page_title %}Checkout{% endblock %}
+
+{% block extra_css %}
+
+<style>
+
+    .checkout-page {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .checkout-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.8fr);
+        gap: 24px;
+        align-items: start;
+    }
+
+    .checkout-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 26px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+    }
+
+    .checkout-card h2 {
+        margin: 0 0 7px;
+        color: #111827;
+        font-size: 21px;
+    }
+
+    .checkout-card > p {
+        margin: 0 0 24px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .checkout-section-title {
+        margin: 25px 0 15px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid #e5e7eb;
+        color: #111827;
+        font-size: 16px;
+    }
+
+    .checkout-section-title:first-of-type {
+        margin-top: 0;
+    }
+
+    .checkout-form p {
+        margin-bottom: 18px;
+    }
+
+    .checkout-form label {
+        display: block;
+        margin-bottom: 7px;
+        color: #374151;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .checkout-form input,
+    .checkout-form select,
+    .checkout-form textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        background: #ffffff;
+        font-size: 14px;
+    }
+
+    .checkout-form input:focus,
+    .checkout-form select:focus,
+    .checkout-form textarea:focus {
+        outline: none;
+        border-color: #1f3b5c;
+        box-shadow: 0 0 0 3px rgba(31,59,92,0.10);
+    }
+
+    .checkout-form ul.errorlist {
+        margin: 6px 0 0;
+        padding-left: 18px;
+        color: #dc2626;
+        font-size: 13px;
+    }
+
+    .checkout-summary {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 24px;
+        position: sticky;
+        top: 20px;
+    }
+
+    .checkout-summary h3 {
+        margin: 0 0 18px;
+        color: #111827;
+    }
+
+    .checkout-summary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 14px;
+    }
+
+    .checkout-summary-row span:first-child {
+        color: #6b7280;
+    }
+
+    .checkout-summary-total {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 17px;
+        font-size: 20px;
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .checkout-note {
+        margin-top: 18px;
+        padding: 12px;
+        border-radius: 9px;
+        background: #eff6ff;
+        color: #1e40af;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .checkout-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    @media (max-width: 800px) {
+
+        .checkout-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .checkout-summary {
+            position: static;
+        }
+    }
+
+    @media (max-width: 500px) {
+
+        .checkout-card,
+        .checkout-summary {
+            padding: 19px;
+        }
+
+        .checkout-actions {
+            flex-direction: column-reverse;
+        }
+
+        .checkout-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="checkout-page">
+
+    <div class="checkout-layout">
+
+        <!-- DELIVERY DETAILS -->
+
+        <div class="checkout-card">
+
+            <h2>Delivery Details</h2>
+
+            <p>
+                Enter your contact and delivery information.
+            </p>
+
+            {% if form.non_field_errors %}
+
+                <div class="alert alert-error">
+                    {{ form.non_field_errors }}
+                </div>
+
+            {% endif %}
+
+
+            <form
+                method="POST"
+                class="checkout-form"
+            >
+
+                {% csrf_token %}
+
+
+                <!-- CONTACT INFORMATION -->
+
+                <h3 class="checkout-section-title">
+                    Contact Information
+                </h3>
+
+                <p>
+                    {{ form.delivery_email.label_tag }}
+                    {{ form.delivery_email }}
+
+                    {% if form.delivery_email.errors %}
+                        {{ form.delivery_email.errors }}
+                    {% endif %}
+                </p>
+
+                <p>
+                    {{ form.delivery_phone.label_tag }}
+                    {{ form.delivery_phone }}
+
+                    {% if form.delivery_phone.errors %}
+                        {{ form.delivery_phone.errors }}
+                    {% endif %}
+                </p>
+
+
+                <!-- DELIVERY ADDRESS -->
+
+                <h3 class="checkout-section-title">
+                    Delivery Address
+                </h3>
+
+                <p>
+                    {{ form.district.label_tag }}
+                    {{ form.district }}
+
+                    {% if form.district.errors %}
+                        {{ form.district.errors }}
+                    {% endif %}
+                </p>
+
+                <p>
+                    {{ form.sector.label_tag }}
+                    {{ form.sector }}
+
+                    {% if form.sector.errors %}
+                        {{ form.sector.errors }}
+                    {% endif %}
+                </p>
+
+                <p>
+                    {{ form.cell_village.label_tag }}
+                    {{ form.cell_village }}
+
+                    {% if form.cell_village.errors %}
+                        {{ form.cell_village.errors }}
+                    {% endif %}
+                </p>
+
+                <p>
+                    {{ form.detailed_address.label_tag }}
+                    {{ form.detailed_address }}
+
+                    {% if form.detailed_address.errors %}
+                        {{ form.detailed_address.errors }}
+                    {% endif %}
+                </p>
+
+
+                <!-- NOTES -->
+
+                <h3 class="checkout-section-title">
+                    Additional Information
+                </h3>
+
+                <p>
+                    {{ form.notes.label_tag }}
+                    {{ form.notes }}
+
+                    {% if form.notes.errors %}
+                        {{ form.notes.errors }}
+                    {% endif %}
+                </p>
+
+
+                <div class="checkout-actions">
+
+                    <a
+                        href="{% url 'view_cart' %}"
+                        class="btn btn-secondary"
+                    >
+                        ← Back to Cart
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="btn btn-success"
+                    >
+                        Place Order
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        <!-- ORDER SUMMARY -->
+
+        <aside class="checkout-summary">
+
+            <h3>Order Summary</h3>
+
+            {% for item in cart_items %}
+
+                <div class="checkout-summary-row">
+
+                    <span>
+                        {{ item.product.item_name }}
+                        × {{ item.quantity }}
+                    </span>
+
+                    <strong>
+                        {{ item.amount }}
+                    </strong>
+
+                </div>
+
+            {% endfor %}
+
+            <div class="checkout-summary-total">
+
+                <span>
+                    Order Total
+                </span>
+
+                <span>
+                    {{ cart_total }}
+                </span>
+
+            </div>
+
+            <div class="checkout-note">
+                After placing your order, you will be taken to
+                the payment process where the available payment
+                instructions will be displayed.
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -30,3 +30,6 @@ media/
 
 # Logs
 *.log
+# Database files and backups (contain real users, hashed passwords and customer data)
+*.sqlite3
+database_backups/

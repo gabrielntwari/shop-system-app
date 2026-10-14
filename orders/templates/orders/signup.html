@@ -1,0 +1,98 @@
+{% extends "users/base.html" %}
+
+{% block title %}Sign Up | GNT Partners{% endblock %}
+{% block page_title %}Create Your Account{% endblock %}
+
+{% block content %}
+
+<div class="card" style="max-width: 480px; margin: 0 auto;">
+
+    <h2 style="margin-top: 0;">
+        Create Your Account
+    </h2>
+
+    <p style="color: #6b7280; font-size: 14px; margin-bottom: 22px;">
+        Create your customer account to browse products,
+        add items to your cart, and place orders.
+    </p>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-error">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% for field in form %}
+
+            <div style="margin-bottom: 17px;">
+
+                <label
+                    for="{{ field.id_for_label }}"
+                    style="
+                        display: block;
+                        margin-bottom: 7px;
+                        font-weight: 600;
+                        font-size: 14px;
+                        color: #374151;
+                    "
+                >
+                    {{ field.label }}
+                </label>
+
+                {{ field }}
+
+                {% if field.help_text %}
+                    <small style="color: #6b7280;">
+                        {{ field.help_text }}
+                    </small>
+                {% endif %}
+
+                {% if field.errors %}
+                    <div
+                        style="
+                            margin-top: 5px;
+                            color: #dc2626;
+                            font-size: 13px;
+                        "
+                    >
+                        {% for error in field.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+            </div>
+
+        {% endfor %}
+
+        <button
+            type="submit"
+            class="btn btn-primary"
+            style="width: 100%;"
+        >
+            Create Account
+        </button>
+
+    </form>
+
+    <p
+        style="
+            margin-top: 18px;
+            font-size: 13px;
+            color: #6b7280;
+            text-align: center;
+        "
+    >
+        Already have an account?
+        <a href="{% url 'login' %}">
+            Log in
+        </a>
+    </p>
+
+</div>
+
+{% endblock %}

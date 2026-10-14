@@ -1,3 +1,4 @@
+
 from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
@@ -5,8 +6,19 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
-from .models import Product
+from .models import Product, ProductPhoto
 from .forms import ProductForm
+
+
+# =========================================================
+# STAFF PERMISSION HELPER
+# =========================================================
+
+def staff_user(request):
+    return (
+        request.user.groups.filter(name="owner").exists()
+        or request.user.groups.filter(name="employee").exists()
+    )
 
 
 # =========================================================
@@ -16,17 +28,36 @@ from .forms import ProductForm
 @login_required
 def add_product(request):
 
-    # Only owner can manually add products
-    if not request.user.groups.filter(name="owner").exists():
+    if not staff_user(request):
         raise PermissionDenied
 
     if request.method == "POST":
 
-        form = ProductForm(request.POST)
+        form = ProductForm(
+            request.POST,
+            request.FILES
+        )
 
         if form.is_valid():
 
-            form.save()
+            product = form.save()
+
+            # -------------------------------------------------
+            # SAVE UP TO 3 GALLERY PHOTOS
+            # -------------------------------------------------
+
+            for position in range(1, 4):
+
+                photo = request.FILES.get(
+                    f"gallery_photo_{position}"
+                )
+
+                if photo:
+                    ProductPhoto.objects.create(
+                        product=product,
+                        image=photo,
+                        position=position
+                    )
 
             return redirect("owner_inventory")
 
@@ -50,8 +81,7 @@ def add_product(request):
 @login_required
 def update_product(request, product_id):
 
-    # Only owner can change product information
-    if not request.user.groups.filter(name="owner").exists():
+    if not staff_user(request):
         raise PermissionDenied
 
     product = get_object_or_404(
@@ -63,12 +93,33 @@ def update_product(request, product_id):
 
         form = ProductForm(
             request.POST,
+            request.FILES,
             instance=product
         )
 
         if form.is_valid():
 
-            form.save()
+            product = form.save()
+
+            # -------------------------------------------------
+            # UPDATE GALLERY PHOTOS
+            # -------------------------------------------------
+
+            for position in range(1, 4):
+
+                photo = request.FILES.get(
+                    f"gallery_photo_{position}"
+                )
+
+                if photo:
+
+                    ProductPhoto.objects.update_or_create(
+                        product=product,
+                        position=position,
+                        defaults={
+                            "image": photo
+                        }
+                    )
 
             return redirect("owner_inventory")
 
@@ -89,19 +140,18 @@ def update_product(request, product_id):
 
 
 # =========================================================
-# OWNER INVENTORY
+# OWNER / STAFF INVENTORY
 # =========================================================
 
 @login_required
 def owner_inventory(request):
 
-    # Only owner can view the owner inventory
-    if not request.user.groups.filter(name="owner").exists():
+    if not staff_user(request):
         raise PermissionDenied
 
     products = Product.objects.all().order_by("-created_at")
 
-    # A product is NEW only for 24 hours
+    # Product is NEW for 24 hours
     new_product_limit = timezone.now() - timedelta(hours=24)
 
     for product in products:

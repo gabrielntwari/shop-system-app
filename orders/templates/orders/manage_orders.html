@@ -1,0 +1,139 @@
+{% extends "users/base.html" %}
+
+{% block title %}Manage Orders | GNT Partners{% endblock %}
+{% block page_title %}Manage Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-pending { background: #fffbeb; color: #b45309; }
+    .status-paid { background: #eff6ff; color: #1d4ed8; }
+    .status-delivered { background: #ecfdf5; color: #16a34a; }
+    .status-cancelled { background: #fef2f2; color: #dc2626; }
+
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+    .filter-tabs a {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        text-decoration: none;
+        color: #374151;
+        background: #f3f4f6;
+    }
+    .filter-tabs a.active {
+        background: #1F3B5C;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="filter-tabs">
+    <a href="?status=pending" class="{% if selected_status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="?status=paid" class="{% if selected_status == 'paid' %}active{% endif %}">Paid</a>
+    <a href="?status=delivered" class="{% if selected_status == 'delivered' %}active{% endif %}">Delivered</a>
+    <a href="?status=cancelled" class="{% if selected_status == 'cancelled' %}active{% endif %}">Cancelled</a>
+    <a href="?status=all" class="{% if selected_status == 'all' %}active{% endif %}">All</a>
+</div>
+
+{% for order in orders %}
+
+    <div class="card" style="margin-bottom: 15px;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+
+            <div>
+                <strong>{{ order.order_number }}</strong> — {{ order.customer.username }}
+                <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+
+            <div>{{ order.created_at|date:"d M Y H:i" }}</div>
+
+        </div>
+
+        <div class="table-container" style="margin-top: 10px;">
+            <table>
+                <thead><tr><th>Product</th><th>Qty</th><th>Amount</th></tr></thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                        <tr>
+                            <td>{{ item.product.item_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.amount|floatformat:2 }} RWF</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: right; font-weight: 700; margin: 8px 0;">
+            Total: {{ order.total|floatformat:2 }} RWF
+        </div>
+
+        {% if order.delivery_phone or order.delivery_address %}
+            <p style="font-size: 13px; color: #6b7280;">
+                Deliver to: {{ order.delivery_phone }} {{ order.delivery_address }}
+            </p>
+        {% endif %}
+
+        {% if order.payment_proofs.all %}
+            <p><strong>Proof of payment:</strong></p>
+            <ul>
+                {% for proof in order.payment_proofs.all %}
+                    <li>
+                        <a href="{% url 'payment_proof_file' proof.id %}" target="_blank">View file</a>
+                        — {{ proof.get_payment_method_display|default:"Not specified" }}
+                        {% if proof.reference_note %}— Ref: {{ proof.reference_note }}{% endif %}
+                        ({{ proof.uploaded_at|date:"d M Y H:i" }})
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: #dc2626; font-size: 13px;">No proof of payment submitted yet.</p>
+        {% endif %}
+
+        <div style="display: flex; gap: 10px; margin-top: 12px;">
+
+            {% if order.status == "pending" %}
+
+                <form method="POST" action="{% url 'mark_order_paid' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Mark as Paid</button>
+                </form>
+
+                <form method="POST" action="{% url 'cancel_order' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Cancel Order</button>
+                </form>
+
+            {% elif order.status == "paid" %}
+
+                <form method="POST" action="{% url 'mark_order_delivered' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Mark as Delivered</button>
+                </form>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+{% empty %}
+
+    <div class="card">No orders in this category.</div>
+
+{% endfor %}
+
+{% endblock %}

@@ -1,17 +1,48 @@
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
 
 from .forms import EmployeeCreationForm, EmployeeMessageForm
-from .models import EmployeeMessage
+from .models import EmployeeMessage, LoginAttempt
 
 from inventory.models import Product
 from purchase.models import Purchase
 from sales.models import Sale
 from expenses.models import Expense, OwnerWithdrawal
+
+
+def get_client_ip(request):
+
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+
+    if forwarded_for:
+        # The client's IP is the first one in the list when behind a proxy/load balancer.
+        return forwarded_for.split(",")[0].strip()
+
+    return request.META.get("REMOTE_ADDR", "unknown")
+
+
+# =========================================================
+# ROLE HELPERS
+# =========================================================
+
+def user_has_role(user, role):
+    if role == "owner" and user.is_superuser:
+        return True
+    return user.groups.filter(name=role).exists()
+
+
+def get_user_role(user):
+    if user.is_superuser or user.groups.filter(name="owner").exists():
+        return "owner"
+    if user.groups.filter(name="employee").exists():
+        return "employee"
+    if user.groups.filter(name="customer").exists():
+        return "customer"
+    return None
 
 
 # =========================================================
@@ -25,8 +56,33 @@ def login_view(request):
 
     if request.method == "POST":
 
-        username = request.POST.get("username")
-        password = request.POST.get("password")
+        client_ip = get_client_ip(request)
+        attempt, _ = LoginAttempt.objects.get_or_create(ip_address=client_ip)
+
+        if attempt.is_locked:
+            return render(request, "users/login.html", {
+                "error": (
+                    f"Too many failed login attempts. "
+                    f"Please try again in {attempt.seconds_remaining} seconds."
+                ),
+                "locked": True,
+            })
+
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        selected_role = request.POST.get("role", "").strip()
+
+        role_labels = {
+            "customer": "Customer",
+            "employee": "Employee",
+            "owner": "Shop Owner",
+        }
+
+        if selected_role not in role_labels:
+            return render(request, "users/login.html", {
+                "error": "Please select how you are logging in.",
+                "selected_role": selected_role,
+            })
 
         user = authenticate(
             request,
@@ -35,23 +91,72 @@ def login_view(request):
         )
 
         if user is not None:
+            actual_role = get_user_role(user)
 
+            if actual_role != selected_role:
+                attempt.register_failure()
+                return render(
+                    request,
+                    "users/login.html",
+                    {
+                        "error": (
+                            f"This account is registered as {role_labels.get(actual_role, 'another role')}. "
+                            f"Please select the correct login type."
+                        ),
+                        "selected_role": selected_role,
+                    }
+                )
+
+            attempt.register_success()
             login(request, user)
-
             return redirect("dashboard")
+
+        attempt.register_failure()
+
+        if attempt.is_locked:
+            return render(request, "users/login.html", {
+                "error": (
+                    f"Too many failed login attempts. "
+                    f"Please try again in {attempt.seconds_remaining} seconds."
+                ),
+                "locked": True,
+            })
 
         return render(
             request,
             "users/login.html",
             {
-                "error": "Invalid username or password."
+                "error": "Invalid username or password.",
+                "selected_role": selected_role,
             }
         )
 
-    return render(
-        request,
-        "users/login.html"
-    )
+    return render(request, "users/login.html")
+
+
+# =========================================================
+# CUSTOMER REGISTRATION
+# =========================================================
+
+def customer_register(request):
+
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+
+    from orders.forms import CustomerRegistrationForm
+
+    if request.method == "POST":
+        form = CustomerRegistrationForm(request.POST)
+        if form.is_valid():
+            customer = form.save()
+            customer_group, _ = Group.objects.get_or_create(name="customer")
+            customer.groups.add(customer_group)
+            login(request, customer)
+            return redirect("product_catalog")
+    else:
+        form = CustomerRegistrationForm()
+
+    return render(request, "users/customer_register.html", {"form": form})
 
 
 # =========================================================
@@ -59,9 +164,7 @@ def login_view(request):
 # =========================================================
 
 def logout_view(request):
-
     logout(request)
-
     return redirect("login")
 
 
@@ -72,17 +175,16 @@ def logout_view(request):
 @login_required
 def dashboard(request):
 
-    if request.user.groups.filter(
-        name="owner"
-    ).exists():
+    role = get_user_role(request.user)
 
+    if role == "owner":
         return redirect("owner_dashboard")
 
-    if request.user.groups.filter(
-        name="employee"
-    ).exists():
-
+    if role == "employee":
         return redirect("employee_dashboard")
+
+    if role == "customer":
+        return redirect("product_catalog")
 
     raise PermissionDenied
 
@@ -110,7 +212,7 @@ def create_employee(request):
 
             employee = form.save()
 
-            employee_group = Group.objects.get(
+            employee_group, _ = Group.objects.get_or_create(
                 name="employee"
             )
 
@@ -255,9 +357,10 @@ def owner_dashboard(request):
     # EMPLOYEES
     # =====================================================
 
-    employee_count = Group.objects.get(
+    employee_group, _ = Group.objects.get_or_create(
         name="employee"
-    ).user_set.count()
+    )
+    employee_count = employee_group.user_set.count()
 
     # =====================================================
     # SALES SUMMARY
@@ -1304,9 +1407,10 @@ def owner_transactions(request):
     # EMPLOYEES
     # =====================================================
 
-    employees = Group.objects.get(
+    employee_group, _ = Group.objects.get_or_create(
         name="employee"
-    ).user_set.all()
+    )
+    employees = employee_group.user_set.all()
 
     # =====================================================
     # CONTEXT
@@ -1628,9 +1732,10 @@ def owner_employees(request):
 
         raise PermissionDenied
 
-    employees = Group.objects.get(
+    employee_group, _ = Group.objects.get_or_create(
         name="employee"
-    ).user_set.all()
+    )
+    employees = employee_group.user_set.all()
 
     return render(
         request,
@@ -1894,7 +1999,9 @@ def owner_messages(request):
 
         raise PermissionDenied
 
-    messages = EmployeeMessage.objects.select_related(
+    # NOTE: do not name this "messages" - that would hide Django's
+    # messages framework inside base.html.
+    employee_messages = EmployeeMessage.objects.select_related(
         "employee"
     ).all()
 
@@ -1902,7 +2009,7 @@ def owner_messages(request):
         request,
         "owner/messages.html",
         {
-            "messages": messages
+            "employee_messages": employee_messages
         }
     )
 
@@ -1923,7 +2030,14 @@ def mark_message_read(
 
         raise PermissionDenied
 
-    message = EmployeeMessage.objects.get(
+    if request.method != "POST":
+
+        return redirect(
+            "owner_messages"
+        )
+
+    message = get_object_or_404(
+        EmployeeMessage,
         id=message_id
     )
 

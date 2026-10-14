@@ -12,10 +12,15 @@ class ProductForm(forms.ModelForm):
             "brand",
             "specification",
             "minimum_selling_price",
+            "photo",
             "source",
         ]
 
         widgets = {
+
+            "photo": forms.ClearableFileInput(attrs={
+                "class": "form-control",
+            }),
 
             "item_name": forms.TextInput(attrs={
                 "class": "form-control",

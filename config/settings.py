@@ -57,6 +57,12 @@ CSRF_TRUSTED_ORIGINS = [
 # PRODUCTION SECURITY SETTINGS
 # =========================================================
 
+# Render (and most hosts) terminate HTTPS at their proxy and forward the
+# request to Django as plain HTTP. Without this header Django never sees
+# the request as secure, so SECURE_SSL_REDIRECT=True causes an endless
+# redirect loop.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 SECURE_SSL_REDIRECT = os.environ.get(
     "SECURE_SSL_REDIRECT",
     "False"
@@ -116,6 +122,7 @@ INSTALLED_APPS = [
     'expenses',
     'credit',
     'proforma',
+    'orders',
 ]
 
 
@@ -163,6 +170,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "orders.context_processors.active_order_count",
+                "users.context_processors.unread_message_count",
             ],
         },
     },
@@ -230,6 +239,11 @@ USE_TZ = True
 # =========================================================
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+# Uploaded files (product photos, payment proofs). On Render the normal
+# disk is wiped on every deploy, so attach a Render Disk and set the
+# MEDIA_ROOT environment variable to its mount path (e.g. /var/data/media).
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", BASE_DIR / 'media'))
 
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 

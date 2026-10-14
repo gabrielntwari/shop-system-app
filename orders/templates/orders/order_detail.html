@@ -1,0 +1,447 @@
+{% extends "users/base.html" %}
+
+{% block title %}Order {{ order.order_number }} | GNT Partners{% endblock %}
+
+{% block page_title %}Order Details{% endblock %}
+
+{% block extra_css %}
+
+<style>
+
+    .order-detail-page {
+        width: 100%;
+        max-width: 1150px;
+        margin: 0 auto;
+    }
+
+    .order-detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        background: linear-gradient(135deg, #1f3b5c, #315d87);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 22px;
+    }
+
+    .order-detail-header h2 {
+        margin: 0 0 7px;
+        font-size: 24px;
+    }
+
+    .order-detail-header p {
+        margin: 0;
+        color: #dbeafe;
+        font-size: 13px;
+    }
+
+    .detail-status {
+        flex-shrink: 0;
+    }
+
+    .detail-status .status-badge {
+        background: #ffffff;
+        color: #1f3b5c;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 22px;
+        align-items: start;
+    }
+
+    .detail-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+    }
+
+    .detail-card-header {
+        padding: 20px 22px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .detail-card-header h3 {
+        margin: 0;
+        color: #111827;
+        font-size: 18px;
+    }
+
+    .detail-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .detail-table {
+        width: 100%;
+        min-width: 550px;
+        border-collapse: collapse;
+    }
+
+    .detail-table th {
+        padding: 13px 16px;
+        background: #f8fafc;
+        color: #6b7280;
+        font-size: 12px;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .detail-table td {
+        padding: 16px;
+        border-top: 1px solid #f1f5f9;
+        font-size: 14px;
+        color: #374151;
+    }
+
+    .detail-product {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .detail-amount {
+        font-weight: 700;
+        color: #1f3b5c;
+    }
+
+    .order-total-box {
+        padding: 20px 22px;
+        background: #f8fafc;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .order-total-box span:first-child {
+        color: #6b7280;
+    }
+
+    .order-total-value {
+        color: #111827;
+        font-size: 22px;
+        font-weight: 800;
+    }
+
+    .timeline-card {
+        padding: 22px;
+    }
+
+    .timeline-card h3 {
+        margin: 0 0 20px;
+        color: #111827;
+        font-size: 18px;
+    }
+
+    .order-info-item {
+        padding: 13px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .order-info-item:last-child {
+        border-bottom: none;
+    }
+
+    .order-info-label {
+        display: block;
+        margin-bottom: 4px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .order-info-value {
+        color: #111827;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .detail-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+    }
+
+    @media (max-width: 850px) {
+
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+
+        .order-detail-header {
+            flex-direction: column;
+        }
+
+        .detail-actions {
+            flex-direction: column;
+        }
+
+        .detail-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+
+        .order-total-box {
+            padding: 18px;
+        }
+
+        .order-total-value {
+            font-size: 19px;
+        }
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="order-detail-page">
+
+
+    <!-- ORDER HEADER -->
+
+    <div class="order-detail-header">
+
+        <div>
+
+            <h2>
+                {{ order.order_number }}
+            </h2>
+
+            <p>
+                Placed {{ order.created_at|date:"d M Y H:i" }}
+            </p>
+
+        </div>
+
+
+        <div class="detail-status">
+
+            <span class="status-badge">
+                {{ order.get_status_display }}
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="detail-grid">
+
+
+        <!-- ORDER ITEMS -->
+
+        <div class="detail-card">
+
+            <div class="detail-card-header">
+
+                <h3>Order Items</h3>
+
+            </div>
+
+
+            <div class="detail-table-wrapper">
+
+                <table class="detail-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Amount</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for item in order.items.all %}
+
+                            <tr>
+
+                                <td>
+                                    <span class="detail-product">
+                                        {{ item.product.item_name }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ item.quantity }}
+                                </td>
+
+                                <td>
+                                    {{ item.price|floatformat:2 }} RWF
+                                </td>
+
+                                <td class="detail-amount">
+                                    {{ item.amount|floatformat:2 }} RWF
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <div class="order-total-box">
+
+                <span>
+                    Order Total
+                </span>
+
+                <span class="order-total-value">
+                    {{ order.total|floatformat:2 }} RWF
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- ORDER INFORMATION -->
+
+        <div>
+
+            <div class="detail-card">
+
+                <div class="timeline-card">
+
+                    <h3>Order Information</h3>
+
+
+                    <div class="order-info-item">
+
+                        <span class="order-info-label">
+                            Order Number
+                        </span>
+
+                        <span class="order-info-value">
+                            {{ order.order_number }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="order-info-item">
+
+                        <span class="order-info-label">
+                            Placed
+                        </span>
+
+                        <span class="order-info-value">
+                            {{ order.created_at|date:"d M Y H:i" }}
+                        </span>
+
+                    </div>
+
+
+                    {% if order.paid_at %}
+
+                        <div class="order-info-item">
+
+                            <span class="order-info-label">
+                                Paid
+                            </span>
+
+                            <span class="order-info-value">
+                                {{ order.paid_at|date:"d M Y H:i" }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if order.delivered_at %}
+
+                        <div class="order-info-item">
+
+                            <span class="order-info-label">
+                                Delivered
+                            </span>
+
+                            <span class="order-info-value">
+                                {{ order.delivered_at|date:"d M Y H:i" }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if order.processed_by %}
+
+                        <div class="order-info-item">
+
+                            <span class="order-info-label">
+                                Processed By
+                            </span>
+
+                            <span class="order-info-value">
+                                {{ order.processed_by.username }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+
+                </div>
+
+            </div>
+
+
+            <div class="detail-actions">
+
+                {% if order.status == "pending" %}
+
+                    <a
+                        href="{% url 'order_payment' order.id %}"
+                        class="btn btn-primary"
+                    >
+                        Go to Payment
+                    </a>
+
+                {% endif %}
+
+                <a
+                    href="{% url 'my_orders' %}"
+                    class="btn btn-secondary"
+                >
+                    ← My Orders
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

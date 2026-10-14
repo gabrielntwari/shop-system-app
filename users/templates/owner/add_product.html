@@ -1,210 +1,632 @@
 {% extends "users/base.html" %}
 
-{% block title %}Add Product{% endblock %}
+{% block title %}Add Product | GNT Partners{% endblock %}
 
 {% block page_title %}Add Product{% endblock %}
 
+{% block extra_css %}
+
+<style>
+
+    .product-form-wrapper {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .product-form-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .form-intro {
+        margin-bottom: 28px;
+    }
+
+    .form-intro h2 {
+        margin: 0 0 7px;
+        font-size: 24px;
+        color: #111827;
+    }
+
+    .form-intro p {
+        margin: 0;
+        color: #6b7280;
+        line-height: 1.5;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .form-section-title {
+        margin-bottom: 18px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-section-title h3 {
+        margin: 0 0 4px;
+        color: #111827;
+        font-size: 18px;
+    }
+
+    .form-section-title p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        min-width: 0;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        color: #374151;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        background: #ffffff;
+        color: #111827;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #1f3b5c;
+        box-shadow: 0 0 0 3px rgba(31, 59, 92, 0.10);
+    }
+
+    .form-help {
+        display: block;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .field-error {
+        margin-top: 6px;
+        color: #dc2626;
+        font-size: 13px;
+    }
+
+    .image-upload-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .upload-box {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 18px;
+        background: #f9fafb;
+        transition: border-color 0.2s ease,
+                    background 0.2s ease;
+    }
+
+    .upload-box:hover {
+        border-color: #315d87;
+        background: #f8fafc;
+    }
+
+    .upload-box.main-upload {
+        grid-column: 1 / -1;
+    }
+
+    .upload-title {
+        margin-bottom: 5px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .upload-description {
+        margin-bottom: 12px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .upload-preview {
+        display: none;
+        width: 100%;
+        max-width: 240px;
+        height: 160px;
+        object-fit: cover;
+        margin-top: 14px;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 22px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    @media (max-width: 700px) {
+
+        .product-form-card {
+            padding: 20px;
+        }
+
+        .form-grid,
+        .image-upload-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .upload-box.main-upload {
+            grid-column: auto;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+</style>
+
+{% endblock %}
+
+
 {% block content %}
 
-<div class="page-header">
+<div class="product-form-wrapper">
 
-    <div>
-        <p>
-            Add a new product to your shop inventory.
-        </p>
-    </div>
+    <div class="product-form-card">
 
-</div>
+        <div class="form-intro">
 
-
-<div class="card form-card">
-
-    <div class="page-header">
-
-        <div>
-            <h2>Product Information</h2>
+            <h2>Add New Product</h2>
 
             <p>
-                Enter the details of the new product.
+                Enter the product information and upload photos
+                that customers will see in the online shop.
             </p>
+
         </div>
+
+
+        {% if form.non_field_errors %}
+
+            <div class="alert alert-error">
+
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            {% csrf_token %}
+
+
+            <!-- ==========================================
+                 PRODUCT INFORMATION
+            =========================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <h3>Product Information</h3>
+
+                    <p>
+                        Basic information about the product.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <!-- PRODUCT NAME -->
+
+                    <div class="form-group">
+
+                        <label for="{{ form.item_name.id_for_label }}">
+                            Product Name
+                        </label>
+
+                        {{ form.item_name }}
+
+                        {% if form.item_name.errors %}
+
+                            <div class="field-error">
+                                {% for error in form.item_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- BRAND -->
+
+                    <div class="form-group">
+
+                        <label for="{{ form.brand.id_for_label }}">
+                            Brand
+                        </label>
+
+                        {{ form.brand }}
+
+                        {% if form.brand.errors %}
+
+                            <div class="field-error">
+                                {% for error in form.brand.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- SPECIFICATION -->
+
+                    <div class="form-group">
+
+                        <label for="{{ form.specification.id_for_label }}">
+                            Specification
+                        </label>
+
+                        {{ form.specification }}
+
+                        {% if form.specification.errors %}
+
+                            <div class="field-error">
+                                {% for error in form.specification.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- PRICE -->
+
+                    <div class="form-group">
+
+                        <label for="{{ form.minimum_selling_price.id_for_label }}">
+                            Minimum Selling Price
+                        </label>
+
+                        {{ form.minimum_selling_price }}
+
+                        <small class="form-help">
+                            The lowest price allowed when selling this product.
+                        </small>
+
+                        {% if form.minimum_selling_price.errors %}
+
+                            <div class="field-error">
+                                {% for error in form.minimum_selling_price.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- SOURCE -->
+
+                    <div class="form-group full-width">
+
+                        <label for="{{ form.source.id_for_label }}">
+                            Product Source
+                        </label>
+
+                        {{ form.source }}
+
+                        <small class="form-help">
+                            Select whether the product comes from your own
+                            stock or an external supplier.
+                        </small>
+
+                        {% if form.source.errors %}
+
+                            <div class="field-error">
+                                {% for error in form.source.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 PRODUCT PHOTOS
+            =========================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <h3>Product Photos</h3>
+
+                    <p>
+                        Add one main photo and up to three additional
+                        gallery photos.
+                    </p>
+
+                </div>
+
+
+                <div class="image-upload-grid">
+
+
+                    <!-- MAIN PHOTO -->
+
+                    <div class="upload-box main-upload">
+
+                        <div class="upload-title">
+                            Main Product Photo
+                        </div>
+
+                        <div class="upload-description">
+                            This is the main image customers will see.
+                        </div>
+
+                        {{ form.photo }}
+
+                        <img
+                            id="mainPhotoPreview"
+                            class="upload-preview"
+                            alt="Main product preview"
+                        >
+
+                        {% if form.photo.errors %}
+
+                            <div class="field-error">
+
+                                {% for error in form.photo.errors %}
+                                    {{ error }}
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- GALLERY PHOTO 1 -->
+
+                    <div class="upload-box">
+
+                        <div class="upload-title">
+                            Gallery Photo 1
+                        </div>
+
+                        <div class="upload-description">
+                            Optional additional product image.
+                        </div>
+
+                        <input
+                            type="file"
+                            name="gallery_photo_1"
+                            accept="image/*"
+                            class="form-control gallery-input"
+                            data-preview="galleryPreview1"
+                        >
+
+                        <img
+                            id="galleryPreview1"
+                            class="upload-preview"
+                            alt="Gallery photo 1 preview"
+                        >
+
+                    </div>
+
+
+                    <!-- GALLERY PHOTO 2 -->
+
+                    <div class="upload-box">
+
+                        <div class="upload-title">
+                            Gallery Photo 2
+                        </div>
+
+                        <div class="upload-description">
+                            Optional additional product image.
+                        </div>
+
+                        <input
+                            type="file"
+                            name="gallery_photo_2"
+                            accept="image/*"
+                            class="form-control gallery-input"
+                            data-preview="galleryPreview2"
+                        >
+
+                        <img
+                            id="galleryPreview2"
+                            class="upload-preview"
+                            alt="Gallery photo 2 preview"
+                        >
+
+                    </div>
+
+
+                    <!-- GALLERY PHOTO 3 -->
+
+                    <div class="upload-box">
+
+                        <div class="upload-title">
+                            Gallery Photo 3
+                        </div>
+
+                        <div class="upload-description">
+                            Optional additional product image.
+                        </div>
+
+                        <input
+                            type="file"
+                            name="gallery_photo_3"
+                            accept="image/*"
+                            class="form-control gallery-input"
+                            data-preview="galleryPreview3"
+                        >
+
+                        <img
+                            id="galleryPreview3"
+                            class="upload-preview"
+                            alt="Gallery photo 3 preview"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 ACTIONS
+            =========================================== -->
+
+            <div class="form-actions">
+
+                <a
+                    href="{% url 'owner_inventory' %}"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    + Add Product
+                </button>
+
+            </div>
+
+        </form>
 
     </div>
 
-
-    {% if form.non_field_errors %}
-
-        <div class="alert alert-error">
-
-            {% for error in form.non_field_errors %}
-                {{ error }}
-            {% endfor %}
-
-        </div>
-
-    {% endif %}
-
-
-    <form method="POST">
-
-        {% csrf_token %}
-
-
-        <!-- PRODUCT NAME -->
-
-        <div class="form-group">
-
-            <label  for="{{ form.item_name.id_for_label }}">
-                Product Name
-            </label>
-
-            {{ form.item_name }}
-
-            {% if form.item_name.errors %}
-
-                <div class="field-error">
-
-                    {% for error in form.item_name.errors %}
-                        {{ error }}
-                    {% endfor %}
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
-
-        <!-- BRAND -->
-
-        <div class="form-group">
-
-            <label for="{{ form.brand.id_for_label }}">
-                Brand
-            </label>
-
-            {{ form.brand }}
-
-            {% if form.brand.errors %}
-
-                <div class="field-error">
-
-                    {% for error in form.brand.errors %}
-                        {{ error }}
-                    {% endfor %}
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
-
-        <!-- SPECIFICATION -->
-
-        <div class="form-group">
-
-            <label for="{{ form.specification.id_for_label }}">
-                Specification
-            </label>
-
-            {{ form.specification }}
-
-            {% if form.specification.errors %}
-
-                <div class="field-error">
-
-                    {% for error in form.specification.errors %}
-                        {{ error }}
-                    {% endfor %}
-
-                </div>
-
-            {% endif %}
-
-        </div>
-
-
-       <!-- MINIMUM SELLING PRICE -->
-
-<div class="form-group">
-
-    <label for="{{ form.minimum_selling_price.id_for_label }}">
-        Minimum Selling Price
-    </label>
-
-    {{ form.minimum_selling_price }}
-
-    <small class="form-help">
-        The lowest price allowed when selling this product.
-    </small>
-
-    {% if form.minimum_selling_price.errors %}
-
-        <div class="field-error">
-
-            {% for error in form.minimum_selling_price.errors %}
-                {{ error }}
-            {% endfor %}
-
-        </div>
-
-    {% endif %}
-
 </div>
-        <!-- SOURCE -->
-
-        <div class="form-group">
-
-            <label for="{{ form.source.id_for_label }}">
-                Product Source
-            </label>
-
-            {{ form.source }}
-
-            <small class="form-help">
-                Select whether the product is from your own stock
-                or an external supplier.
-            </small>
-
-            {% if form.source.errors %}
-
-                <div class="field-error">
-
-                    {% for error in form.source.errors %}
-                        {{ error }}
-                    {% endfor %}
-
-                </div>
-
-            {% endif %}
-
-        </div>
 
 
-        <!-- BUTTONS -->
-
-        <div class="form-actions">
-
-            <a
-                href="{% url 'owner_inventory' %}"
-                class="btn btn-secondary"
-            >
-                Cancel
-            </a>
+{% endblock %}
 
 
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                + Add Product
-            </button>
+{% block extra_js %}
 
-        </div>
+<script>
 
-    </form>
+    function previewImage(input, previewId) {
 
-</div>
+        const preview = document.getElementById(previewId);
+
+        if (!preview || !input.files || !input.files[0]) {
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+
+            preview.src = event.target.result;
+            preview.style.display = "block";
+
+        };
+
+        reader.readAsDataURL(input.files[0]);
+    }
+
+
+    const mainPhotoInput =
+        document.getElementById("id_photo");
+
+    if (mainPhotoInput) {
+
+        mainPhotoInput.addEventListener(
+            "change",
+            function() {
+
+                previewImage(
+                    this,
+                    "mainPhotoPreview"
+                );
+
+            }
+        );
+
+    }
+
+
+    document
+        .querySelectorAll(".gallery-input")
+        .forEach(function(input) {
+
+            input.addEventListener(
+                "change",
+                function() {
+
+                    previewImage(
+                        this,
+                        this.dataset.preview
+                    );
+
+                }
+            );
+
+        });
+
+</script>
 
 {% endblock %}

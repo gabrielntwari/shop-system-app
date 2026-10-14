@@ -1,0 +1,50 @@
+{% extends "users/base.html" %}
+
+{% block title %}Message Owner{% endblock %}
+
+{% block page_title %}Message Owner{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+
+    <div>
+        <h1>Message Owner</h1>
+        <p>Send a message to the shop owner.</p>
+    </div>
+
+</div>
+
+<div class="card">
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <div class="form-group">
+
+            <label for="{{ form.message.id_for_label }}">
+                Message
+            </label>
+
+            {{ form.message }}
+
+            {% for error in form.message.errors %}
+                <div class="error">{{ error }}</div>
+            {% endfor %}
+
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Send Message
+        </button>
+
+        <a href="{% url 'employee_dashboard' %}" class="btn btn-secondary">
+            Cancel
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

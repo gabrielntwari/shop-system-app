@@ -7,12 +7,47 @@
 {% block content %}
 
 <!-- =========================
+     UNREAD EMPLOYEE MESSAGES
+========================= -->
+
+{% if unread_message_count > 0 %}
+
+<a
+    href="{% url 'owner_messages' %}"
+    style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding: 14px 18px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 10px;
+        color: #1e40af;
+        font-weight: 600;
+        text-decoration: none;
+    "
+>
+    <span>
+        ✉ You have {{ unread_message_count }}
+        unread message{{ unread_message_count|pluralize }}
+        from your employees.
+    </span>
+
+    <span>View messages →</span>
+</a>
+
+{% endif %}
+
+<!-- =========================
      HEADER
 ========================= -->
 
 <div class="page-header">
 
     <div>
+
         <h1>
             Welcome,
             {{ request.user.first_name|default:request.user.username }}
@@ -21,11 +56,43 @@
         <p>
             Here's what's happening in your shop.
         </p>
+
     </div>
 
-    <a href="{% url 'create_employee' %}" class="btn btn-primary">
-        + Add Employee
-    </a>
+
+    <!-- OWNER ACTIONS -->
+
+    <div style="
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    ">
+
+        <a
+            href="{% url 'create_employee' %}"
+            class="btn btn-primary"
+        >
+            + Add Employee
+        </a>
+
+
+        <a
+            href="{% url 'proforma_list' %}"
+            class="btn btn-primary"
+        >
+            Proforma
+        </a>
+
+
+        <a
+            href="{% url 'payment_settings' %}"
+            class="btn btn-primary"
+        >
+            Payment Settings
+        </a>
+
+    </div>
 
 </div>
 
@@ -461,135 +528,6 @@
         </a>
 
     </div>
-
-</div>
-
-
-<!-- =========================
-     QUICK ACTIONS
-========================= -->
-
-<div class="page-header">
-<a href="{% url 'add_expense' %}" class="btn btn-primary">
-    + Record Expense
-</a>
-
-<a href="{% url 'owner_expenses' %}" class="btn btn-secondary">
-    View All Expenses
-</a>
-    <div>
-
-        <h2>
-            Quick Actions
-        </h2>
-
-        <p>
-            Quickly perform common shop management tasks.
-        </p>
-
-    </div>
-
-</div>
-
-
-<div class="stats-grid">
-
-
-    <!-- ADD EMPLOYEE -->
-
-    <div class="card">
-
-        <h3>
-            Add Employee
-        </h3>
-
-        <p>
-            Create a new employee account.
-        </p>
-
-        <br>
-
-        <a
-            href="{% url 'create_employee' %}"
-            class="btn btn-primary"
-        >
-            Add Employee
-        </a>
-
-    </div>
-
-
-    <!-- ADD PRODUCT -->
-
-    <div class="card">
-
-        <h3>
-            Add Product
-        </h3>
-
-        <p>
-            Add a new product to the inventory.
-        </p>
-
-        <br>
-
-        <a
-            href="{% url 'add_product' %}"
-            class="btn btn-primary"
-        >
-            Add Product
-        </a>
-
-    </div>
-
-
-    <!-- RECORD EXPENSE -->
-
-    <div class="card">
-
-        <h3>
-            Record Expense
-        </h3>
-
-        <p>
-            Record a business expense or owner withdrawal.
-        </p>
-
-        <br>
-
-        <a
-            href="{% url 'add_expense' %}"
-            class="btn btn-primary"
-        >
-            Record Expense
-        </a>
-
-    </div>
-
-
-    <!-- VIEW EXPENSES -->
-
-    <div class="card">
-
-        <h3>
-            Expense Records
-        </h3>
-
-        <p>
-            View and manage all expenses recorded in the shop.
-        </p>
-
-        <br>
-
-        <a
-            href="{% url 'owner_expenses' %}"
-            class="btn btn-primary"
-        >
-            View Expenses
-        </a>
-
-    </div>
-
 
 </div>
 

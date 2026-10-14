@@ -1,159 +1,660 @@
 {% extends "users/base.html" %}
 
-{% block title %}Update Product{% endblock %}
+{% block title %}Update Product | GNT Partners{% endblock %}
 
 {% block page_title %}Update Product{% endblock %}
 
+{% block extra_css %}
+
+<style>
+
+    .product-form-wrapper {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .product-form-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .form-intro {
+        margin-bottom: 28px;
+    }
+
+    .form-intro h2 {
+        margin: 0 0 7px;
+        font-size: 24px;
+        color: #111827;
+    }
+
+    .form-intro p {
+        margin: 0;
+        color: #6b7280;
+    }
+
+    .form-section {
+        margin-bottom: 30px;
+    }
+
+    .form-section-title {
+        margin-bottom: 18px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-section-title h3 {
+        margin: 0 0 4px;
+        color: #111827;
+        font-size: 18px;
+    }
+
+    .form-section-title p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .form-group {
+        min-width: 0;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 7px;
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+    }
+
+    .form-control {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 9px;
+        background: white;
+        font-size: 14px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #1f3b5c;
+        box-shadow: 0 0 0 3px rgba(31, 59, 92, 0.10);
+    }
+
+    .form-help {
+        display: block;
+        margin-top: 6px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+
+    .field-error {
+        margin-top: 6px;
+        color: #dc2626;
+        font-size: 13px;
+    }
+
+    .current-images {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 22px;
+    }
+
+    .current-image-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #f9fafb;
+    }
+
+    .current-image-card img {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .current-image-label {
+        padding: 9px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        text-align: center;
+    }
+
+    .image-upload-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .upload-box {
+        border: 2px dashed #d1d5db;
+        border-radius: 12px;
+        padding: 18px;
+        background: #f9fafb;
+    }
+
+    .upload-title {
+        margin-bottom: 5px;
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .upload-description {
+        margin-bottom: 12px;
+        color: #6b7280;
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .upload-preview {
+        display: none;
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        margin-top: 14px;
+        border-radius: 9px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 22px;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    @media (max-width: 800px) {
+
+        .form-grid,
+        .image-upload-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: auto;
+        }
+
+        .current-images {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 500px) {
+
+        .product-form-card {
+            padding: 18px;
+        }
+
+        .current-images {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .form-actions .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+</style>
+
+{% endblock %}
+
+
 {% block content %}
 
-<div class="page-header">
+<div class="product-form-wrapper">
 
-    <div>
-        <h1>Update Product</h1>
+    <div class="product-form-card">
 
-        <p>
-            Update product information and minimum selling price.
-        </p>
+        <div class="form-intro">
+
+            <h2>Update Product</h2>
+
+            <p>
+                Update product information, pricing and photos.
+            </p>
+
+        </div>
+
+
+        {% if form.non_field_errors %}
+
+            <div class="alert alert-error">
+
+                {% for error in form.non_field_errors %}
+                    {{ error }}
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <form
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            {% csrf_token %}
+
+
+            <!-- ==========================================
+                 PRODUCT INFORMATION
+            =========================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <h3>Product Information</h3>
+
+                    <p>
+                        Update the basic product information.
+                    </p>
+
+                </div>
+
+
+                <div class="form-grid">
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Product Name
+                        </label>
+
+                        {{ form.item_name }}
+
+                        {% if form.item_name.errors %}
+                            <div class="field-error">
+                                {{ form.item_name.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Brand
+                        </label>
+
+                        {{ form.brand }}
+
+                        {% if form.brand.errors %}
+                            <div class="field-error">
+                                {{ form.brand.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Specification
+                        </label>
+
+                        {{ form.specification }}
+
+                        {% if form.specification.errors %}
+                            <div class="field-error">
+                                {{ form.specification.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Minimum Selling Price
+                        </label>
+
+                        {{ form.minimum_selling_price }}
+
+                        {% if form.minimum_selling_price.errors %}
+                            <div class="field-error">
+                                {{ form.minimum_selling_price.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="form-group full-width">
+
+                        <label>
+                            Product Source
+                        </label>
+
+                        {{ form.source }}
+
+                        {% if form.source.errors %}
+                            <div class="field-error">
+                                {{ form.source.errors }}
+                            </div>
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 CURRENT PHOTOS
+            =========================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <h3>Current Photos</h3>
+
+                    <p>
+                        These are the photos currently stored for this product.
+                    </p>
+
+                </div>
+
+
+                <div class="current-images">
+
+                    {% if product.photo %}
+
+                        <div class="current-image-card">
+
+                            <img
+                                src="{{ product.photo.url }}"
+                                alt="{{ product.item_name }}"
+                            >
+
+                            <div class="current-image-label">
+                                Main Photo
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% for photo in product.photos.all %}
+
+                        <div class="current-image-card">
+
+                            <img
+                                src="{{ photo.image.url }}"
+                                alt="{{ product.item_name }}"
+                            >
+
+                            <div class="current-image-label">
+                                Gallery Photo {{ photo.position }}
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 REPLACE / ADD PHOTOS
+            =========================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <h3>Update Photos</h3>
+
+                    <p>
+                        Upload a new image only when you want to
+                        replace the existing image.
+                    </p>
+
+                </div>
+
+
+                <div class="image-upload-grid">
+
+
+                    <!-- GALLERY 1 -->
+
+                    <div class="upload-box">
+
+                        <div class="upload-title">
+                            Gallery Photo 1
+                        </div>
+
+                        <div class="upload-description">
+                            Replaces the current Gallery Photo 1.
+                        </div>
+
+                        <input
+                            type="file"
+                            name="gallery_photo_1"
+                            accept="image/*"
+                            class="form-control gallery-input"
+                            data-preview="galleryPreview1"
+                        >
+
+                        <img
+                            id="galleryPreview1"
+                            class="upload-preview"
+                            alt="Gallery preview"
+                        >
+
+                    </div>
+
+
+                    <!-- GALLERY 2 -->
+
+                    <div class="upload-box">
+
+                        <div class="upload-title">
+                            Gallery Photo 2
+                        </div>
+
+                        <div class="upload-description">
+                            Replaces the current Gallery Photo 2.
+                        </div>
+
+                        <input
+                            type="file"
+                            name="gallery_photo_2"
+                            accept="image/*"
+                            class="form-control gallery-input"
+                            data-preview="galleryPreview2"
+                        >
+
+                        <img
+                            id="galleryPreview2"
+                            class="upload-preview"
+                            alt="Gallery preview"
+                        >
+
+                    </div>
+
+
+                    <!-- GALLERY 3 -->
+
+                    <div class="upload-box">
+
+                        <div class="upload-title">
+                            Gallery Photo 3
+                        </div>
+
+                        <div class="upload-description">
+                            Replaces the current Gallery Photo 3.
+                        </div>
+
+                        <input
+                            type="file"
+                            name="gallery_photo_3"
+                            accept="image/*"
+                            class="form-control gallery-input"
+                            data-preview="galleryPreview3"
+                        >
+
+                        <img
+                            id="galleryPreview3"
+                            class="upload-preview"
+                            alt="Gallery preview"
+                        >
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ==========================================
+                 MAIN PHOTO
+            =========================================== -->
+
+            <div class="form-section">
+
+                <div class="form-section-title">
+
+                    <h3>Main Product Photo</h3>
+
+                    <p>
+                        Upload a new main photo if you want to replace
+                        the current one.
+                    </p>
+
+                </div>
+
+                {{ form.photo }}
+
+                {% if form.photo.errors %}
+                    <div class="field-error">
+                        {{ form.photo.errors }}
+                    </div>
+                {% endif %}
+
+            </div>
+
+
+            <!-- ==========================================
+                 ACTIONS
+            =========================================== -->
+
+            <div class="form-actions">
+
+                <a
+                    href="{% url 'owner_inventory' %}"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
     </div>
 
 </div>
 
 
-<div class="card">
-
-    {% if form.non_field_errors %}
-
-        <div class="form-errors">
-            {{ form.non_field_errors }}
-        </div>
-
-    {% endif %}
+{% endblock %}
 
 
-    <form method="POST">
+{% block extra_js %}
 
-        {% csrf_token %}
+<script>
 
+    function previewImage(input, previewId) {
 
-        {% for field in form %}
+        const preview =
+            document.getElementById(previewId);
 
-            <div class="form-group">
+        if (
+            !preview ||
+            !input.files ||
+            !input.files[0]
+        ) {
+            return;
+        }
 
-                {{ field.label_tag }}
+        const reader =
+            new FileReader();
 
-                {{ field }}
+        reader.onload = function(event) {
 
-                {% if field.errors %}
-                    {{ field.errors }}
-                {% endif %}
+            preview.src =
+                event.target.result;
 
-            </div>
+            preview.style.display =
+                "block";
 
-        {% endfor %}
+        };
 
-
-        <div class="buttons">
-
-            <a
-                href="{% url 'owner_inventory' %}"
-                class="btn btn-secondary"
-            >
-                Cancel
-            </a>
-
-
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                Save Changes
-            </button>
-
-        </div>
-
-    </form>
-
-</div>
+        reader.readAsDataURL(
+            input.files[0]
+        );
+    }
 
 
-<style>
+    document
+        .querySelectorAll(".gallery-input")
+        .forEach(function(input) {
 
-.form-group {
-    margin-bottom: 20px;
-}
+            input.addEventListener(
+                "change",
+                function() {
 
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-}
+                    previewImage(
+                        this,
+                        this.dataset.preview
+                    );
 
-.form-group input,
-.form-group select,
-.form-group textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 15px;
-}
+                }
+            );
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
+        });
 
-.errorlist {
-    color: #dc2626;
-    margin-top: 6px;
-    list-style: none;
-}
-
-.form-errors {
-    background: #fee2e2;
-    color: #991b1b;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 25px;
-}
-
-.btn {
-    padding: 12px 20px;
-    border-radius: 8px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-.btn-primary {
-    background: #2563eb;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #1d4ed8;
-}
-
-.btn-secondary {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.btn-secondary:hover {
-    background: #d1d5db;
-}
-
-</style>
+</script>
 
 {% endblock %}

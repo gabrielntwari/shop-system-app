@@ -1,0 +1,273 @@
+{% extends "users/base.html" %}
+
+{% block title %}My Orders | GNT Partners{% endblock %}
+{% block page_title %}My Orders{% endblock %}
+
+{% block extra_css %}
+
+<style>
+
+    .orders-page {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .orders-header {
+        background: linear-gradient(135deg, #1f3b5c, #315d87);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 25px;
+        margin-bottom: 22px;
+    }
+
+    .orders-header h2 {
+        margin: 0 0 6px;
+        font-size: 23px;
+    }
+
+    .orders-header p {
+        margin: 0;
+        color: #dbeafe;
+        font-size: 14px;
+    }
+
+    .orders-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+    }
+
+    .orders-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .orders-table {
+        width: 100%;
+        min-width: 700px;
+        border-collapse: collapse;
+    }
+
+    .orders-table th {
+        padding: 14px 18px;
+        background: #f8fafc;
+        color: #6b7280;
+        text-align: left;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .orders-table td {
+        padding: 17px 18px;
+        border-top: 1px solid #f1f5f9;
+        font-size: 14px;
+        color: #374151;
+    }
+
+    .order-number {
+        font-weight: 700;
+        color: #111827;
+    }
+
+    .order-total {
+        font-weight: 700;
+        color: #1f3b5c;
+        white-space: nowrap;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 11px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .status-pending {
+        background: #fffbeb;
+        color: #b45309;
+    }
+
+    .status-paid {
+        background: #eff6ff;
+        color: #1d4ed8;
+    }
+
+    .status-delivered {
+        background: #ecfdf5;
+        color: #16a34a;
+    }
+
+    .status-cancelled {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .empty-orders {
+        text-align: center;
+        padding: 65px 25px;
+    }
+
+    .empty-orders-icon {
+        font-size: 42px;
+        margin-bottom: 12px;
+    }
+
+    .empty-orders h3 {
+        margin: 0 0 8px;
+        color: #111827;
+    }
+
+    .empty-orders p {
+        margin: 0 0 20px;
+        color: #6b7280;
+    }
+
+    @media (max-width: 600px) {
+
+        .orders-header {
+            padding: 20px;
+        }
+
+        .orders-table {
+            min-width: 600px;
+        }
+    }
+
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="orders-page">
+
+    <div class="orders-header">
+
+        <h2>Your Orders</h2>
+
+        <p>
+            Track your orders, payment status and delivery progress.
+        </p>
+
+    </div>
+
+
+    <div class="orders-card">
+
+        {% if orders %}
+
+            <div class="orders-table-wrapper">
+
+                <table class="orders-table">
+
+                    <thead>
+
+                        <tr>
+                            <th>Order</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for order in orders %}
+
+                            <tr>
+
+                                <td>
+                                    <span class="order-number">
+                                        {{ order.order_number }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ order.created_at|date:"d M Y" }}
+                                </td>
+
+                                <td class="order-total">
+                                    {{ order.total|floatformat:2 }} RWF
+                                </td>
+
+                                <td>
+
+                                    <span class="status-badge status-{{ order.status }}">
+                                        {{ order.get_status_display }}
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    {% if order.status == "pending" %}
+
+                                        <a
+                                            href="{% url 'order_payment' order.id %}"
+                                            class="btn btn-small btn-primary"
+                                        >
+                                            Pay
+                                        </a>
+
+                                    {% else %}
+
+                                        <a
+                                            href="{% url 'order_detail' order.id %}"
+                                            class="btn btn-small btn-secondary"
+                                        >
+                                            View Order
+                                        </a>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-orders">
+
+                <div class="empty-orders-icon">
+                    📦
+                </div>
+
+                <h3>No orders yet</h3>
+
+                <p>
+                    When you place an order, it will appear here.
+                </p>
+
+                <a
+                    href="{% url 'product_catalog' %}"
+                    class="btn btn-primary"
+                >
+                    Start Shopping
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
