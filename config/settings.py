@@ -1,4 +1,4 @@
-from pathlib import Path
+wfrom pathlib import Path
 import os
 import dj_database_url
 
@@ -304,9 +304,9 @@ SHOP = {
     "address": "Kigali, Rwanda",
     "socials": {
         "facebook": "https://www.facebook.com/profile.php?id=100064463491249",
-        "instagram": "https://www.instagram.com/gnt_trust?xtok=MW40YjVlZTNjcXRsOA==",
+        "instagram": "https://www.instagram.com/gnt_partners?cplk=MW40YjVlZTNjcXRsOA==",
         "tiktok": "https://www.tiktok.com/@gnt.trust?is_from_webapp=1&sender_device=pc",
-        "youtube": "https://youtube.com",
+        "youtube": "https://youtube.com/@gntpartners?si=iB015KbGVcKs5sQH",
         "linkedin": "https://www.linkedin.com/company/gnt-trust/",
     },
     # Hero slider. "image" is a path under static/ (e.g. "shop/slides/1.jpg");
