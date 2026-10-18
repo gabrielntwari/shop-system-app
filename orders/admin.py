@@ -3,6 +3,7 @@ from django.contrib import admin
 
 from .models import (
     BusinessPaymentInfo,
+    CustomerProfile,
     Order,
     OrderItem,
     PaymentProof,
@@ -42,6 +43,9 @@ class OrderAdmin(admin.ModelAdmin):
 
     search_fields = (
         "order_number",
+        "customer_name",
+        "delivery_phone",
+        "delivery_email",
         "customer__username",
         "customer__first_name",
         "customer__last_name",
@@ -90,4 +94,22 @@ class PaymentProofAdmin(admin.ModelAdmin):
     search_fields = (
         "order__order_number",
         "reference_note",
+    )
+
+
+@admin.register(CustomerProfile)
+class CustomerProfileAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "user",
+        "phone",
+        "created_at",
+    )
+
+    search_fields = (
+        "user__username",
+        "user__first_name",
+        "user__last_name",
+        "user__email",
+        "phone",
     )

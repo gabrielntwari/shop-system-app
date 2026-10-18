@@ -15,20 +15,30 @@
             <h1>GNT Partners</h1>
             <p>Sign in to continue</p>
         </div>
-
+           {% for message in messages %}
+   <div style="background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;padding:10px 12px;border-radius:8px;margin-bottom:12px;font-size:14px;">{{ message }}</div>
+   {% endfor %}
         {% if error %}<div class="error-message">{{ error }}</div>{% endif %}
 
         <form method="POST">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="role">Login as</label>
-                <select id="role" name="role" class="form-control" required>
-                    <option value="">Select account type</option>
-                    <option value="customer" {% if selected_role == "customer" %}selected{% endif %}>Customer</option>
-                    <option value="employee" {% if selected_role == "employee" %}selected{% endif %}>Employee</option>
-                    <option value="owner" {% if selected_role == "owner" %}selected{% endif %}>Shop Owner</option>
-                </select>
-            </div>
+               {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+              {% if selected_role == "customer" or selected_role == "employee" or selected_role == "owner" %}
+   <input type="hidden" name="role" value="{{ selected_role }}">
+   <p style="margin:0 0 14px;color:#64748b;font-size:14px;text-align:center;">
+       Signing in as <strong style="color:#1F3B5C;">{% if selected_role == "owner" %}Shop Owner{% elif selected_role == "employee" %}Employee{% else %}Customer{% endif %}</strong>
+   </p>
+   {% else %}
+   <div class="form-group">
+       <label for="role">Login as</label>
+       <select id="role" name="role" class="form-control" required>
+           <option value="">Select account type</option>
+           <option value="customer">Customer</option>
+           <option value="employee">Employee</option>
+           <option value="owner">Shop Owner</option>
+       </select>
+   </div>
+   {% endif %}
             <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter your username" required autocomplete="username">
@@ -40,12 +50,19 @@
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
 
-        <div class="login-register-link">
-            <span>New customer?</span>
-            <a href="{% url 'customer_register' %}">Create a customer account</a>
-        </div>
+           {% if selected_role != "employee" and selected_role != "owner" %}
+   <div class="login-register-link">
+       <span>New customer?</span>
+       <a href="{% url 'customer_register' %}{% if next %}?next={{ next|urlencode }}{% endif %}">Create a customer account</a>
+   </div>
+   {% endif %}
     </div>
 </div>
+{% include "users/_site_footer.html" %}
+<style>.login-page{background:transparent!important;position:relative;z-index:1}</style>
+<canvas id="netbg" aria-hidden="true"></canvas>
+<script src="{% static 'js/netbg.js' %}"></script>
+
 <script src="{% static 'js/main.js' %}"></script>
 </body>
 </html>

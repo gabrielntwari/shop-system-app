@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "orders/shop_base.html" %}
 
 {% block title %}Checkout | GNT Partners{% endblock %}
 {% block page_title %}Checkout{% endblock %}
@@ -216,6 +216,15 @@
                 </h3>
 
                 <p>
+                    {{ form.customer_name.label_tag }}
+                    {{ form.customer_name }}
+
+                    {% if form.customer_name.errors %}
+                        {{ form.customer_name.errors }}
+                    {% endif %}
+                </p>
+
+                <p>
                     {{ form.delivery_email.label_tag }}
                     {{ form.delivery_email }}
 
@@ -327,7 +336,7 @@
                 <div class="checkout-summary-row">
 
                     <span>
-                        {{ item.product.item_name }}
+                        {{ item.product.item_name }}{% if item.color %} ({{ item.color }}){% endif %}
                         × {{ item.quantity }}
                     </span>
 

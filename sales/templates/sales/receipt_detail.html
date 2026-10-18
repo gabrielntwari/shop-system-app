@@ -1,0 +1,99 @@
+{% extends "users/base.html" %}
+{% load humanize %}
+
+{% block title %}Receipt {{ receipt.number }}{% endblock %}
+{% block page_title %}Receipt {{ receipt.number }}{% endblock %}
+{% block extra_css %}{% include "sales/_receipt_css.html" %}{% endblock %}
+
+{% block content %}
+<div class="rc rc-wrap">
+
+<a href="{% url 'receipt_list' %}" style="font-size:14px;text-decoration:none;color:#1d4ed8">&larr; All receipts</a>
+
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin:12px 0 20px">
+<div>{% if receipt.balance > 0 %}<span class="rc-pill due">Balance due</span>{% else %}<span class="rc-pill ok">Paid in full</span>{% endif %}
+<span class="rc-hint" style="margin-left:10px">{{ receipt.source_label }}</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:10px">
+<a class="rc-btn2" href="{% url 'receipt_print' receipt.pk %}" target="_blank">Print receipt</a>
+<a class="rc-btn2" href="{% url 'receipt_print' receipt.pk %}?size=80" target="_blank">Print small (80 mm)</a>
+{% if whatsapp %}<a class="rc-btn2" target="_blank" rel="noopener" href="https://wa.me/{{ whatsapp }}?text=Receipt%20{{ receipt.number }}%20-%20GNT%20Partners%0ATotal%3A%20{{ receipt.total|floatformat:0 }}%20RWF%0APaid%3A%20{{ receipt.paid|floatformat:0 }}%20RWF%0ABalance%3A%20{{ receipt.balance|floatformat:0 }}%20RWF">Send on WhatsApp</a>{% endif %}
+</div>
+</div>
+
+<div class="rc-grid">
+<div class="rc-main">
+
+<section class="rc-card">
+<h2>Products on this receipt</h2>
+<div class="rc-tablewrap" style="margin-top:10px">
+<table class="rc-table">
+<thead><tr><th>Product</th><th>Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead>
+<tbody>
+{% for s in lines %}
+<tr><td><b>{{ s.product }}</b></td><td>{{ s.quantity }}</td><td class="r">{{ s.selling_price|floatformat:0|intcomma }}</td><td class="r"><b>{{ s.total_sales|floatformat:0|intcomma }}</b></td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<div style="margin:12px 0 0 auto;max-width:340px;display:flex;flex-direction:column;gap:8px;font-size:14px">
+<div style="display:flex;justify-content:space-between"><span style="color:#6b7280">Total</span><b>{{ receipt.total|floatformat:0|intcomma }} RWF</b></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#6b7280">Paid so far</span><b>{{ receipt.paid|floatformat:0|intcomma }} RWF</b></div>
+<div class="rc-balance {% if receipt.balance <= 0 %}ok{% endif %}" style="display:flex;justify-content:space-between"><b>Balance to pay</b><b style="font-size:18px">{{ receipt.balance|floatformat:0|intcomma }} RWF</b></div>
+</div>
+<p class="rc-hint" style="margin:14px 0 0;font-size:12px">Stock of these products was reduced when the sale was saved on {{ receipt.created_at|date:"d M Y, H:i" }}.</p>
+</section>
+
+<section class="rc-card">
+<h2>Payments received</h2>
+{% for p in payments %}
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid #f1f5f9;font-size:14px">
+<span><b>{{ p.amount|floatformat:0|intcomma }} RWF</b><br><span class="rc-hint" style="margin:0;font-size:12px">{{ p.get_payment_method_display|default:"-" }}{% if p.recorded_by %} · recorded by {{ p.recorded_by.username }}{% endif %}</span></span>
+<span style="color:#6b7280">{{ p.date|date:"d M Y, H:i" }}</span>
+</div>
+{% empty %}
+<p class="rc-hint" style="margin:0">No payment received yet.</p>
+{% endfor %}
+</section>
+</div>
+
+<aside class="rc-side">
+
+{% if receipt.balance > 0 %}
+<section class="rc-card" style="border:2px solid #2563eb;display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0">Record a payment</h2>
+<form method="post" style="display:flex;flex-direction:column;gap:14px">
+{% csrf_token %}
+<div class="rc-f"><label for="amt">Amount received (RWF)</label>
+<input id="amt" name="amount" inputmode="numeric" value="{{ receipt.balance|floatformat:0 }}" style="font-size:18px;font-weight:700">
+<span class="rc-hint" style="margin:0;font-size:12px">Cannot be more than the {{ receipt.balance|floatformat:0|intcomma }} RWF still owed.</span></div>
+<div class="rc-f"><label for="m2">Payment method</label>
+<select id="m2" name="method">{% for v,l in methods %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+<button class="rc-btn" type="submit">Save payment</button>
+</form>
+</section>
+{% endif %}
+
+<section class="rc-card">
+<h2>Customer</h2>
+<div>
+<div class="rc-kv"><span>Name</span><b>{{ receipt.customer_name|default:"Walk-in customer" }}</b></div>
+{% if receipt.customer_phone %}<div class="rc-kv"><span>Phone</span><b>{{ receipt.customer_phone }}</b></div>{% endif %}
+{% if receipt.customer_email %}<div class="rc-kv"><span>Email</span><b>{{ receipt.customer_email }}</b></div>{% endif %}
+<div class="rc-kv"><span>Served by</span><b>{{ receipt.employee.username|default:"-" }}</b></div>
+<div class="rc-kv"><span>Date</span><b>{{ receipt.created_at|date:"d M Y, H:i" }}</b></div>
+{% if receipt.promise_date %}<div class="rc-kv"><span>Promised to pay by</span><b style="color:#9a3412">{{ receipt.promise_date|date:"d M Y" }}</b></div>{% endif %}
+{% if receipt.note %}<div class="rc-kv"><span>Note</span><b>{{ receipt.note }}</b></div>{% endif %}
+</div>
+</section>
+
+{% if previous_count %}
+<section class="rc-card">
+<h2>Earlier receipts</h2>
+<p class="rc-hint" style="margin:0">This customer has {{ previous_count }} other receipt{{ previous_count|pluralize }}: {{ previous_total|floatformat:0|intcomma }} RWF in total{% if previous_owed > 0 %}, and still owes <b style="color:#9a3412">{{ previous_owed|floatformat:0|intcomma }} RWF</b> on them{% else %}, with nothing owed{% endif %}.</p>
+</section>
+{% endif %}
+
+</aside>
+</div>
+</div>
+{% endblock %}

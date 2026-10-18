@@ -7,14 +7,14 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 
 from django.contrib import admin
 from django.urls import include, path, re_path
-from users.views import login_view
+from orders.views import product_catalog
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 
 
 urlpatterns = [
-    path("", login_view, name="home"),
+    path("", product_catalog, name="home"),
 
     path("users/", include("users.urls")),
     path("admin/", admin.site.urls),

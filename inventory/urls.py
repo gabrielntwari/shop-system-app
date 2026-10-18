@@ -25,4 +25,8 @@ urlpatterns = [
         name="update_product"
     ),
 
+    path("tier/<int:product_id>/", views.set_product_tier, name="set_product_tier"),
+    path("categories/", views.manage_categories, name="manage_categories"),
+    path("categories/<int:category_id>/", views.edit_category, name="edit_category"),
+
 ]

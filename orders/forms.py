@@ -63,12 +63,14 @@ class CustomerRegistrationForm(UserCreationForm):
 
     first_name = forms.CharField(
         max_length=150,
-        required=False,
+        required=True,
+        label="First name",
     )
 
     last_name = forms.CharField(
         max_length=150,
-        required=False,
+        required=True,
+        label="Last name",
     )
 
     email = forms.EmailField(
@@ -105,6 +107,20 @@ class CustomerRegistrationForm(UserCreationForm):
             "password1",
             "password2",
         ]
+
+    def save(self, commit=True):
+        """Create the user and keep the phone number on a profile."""
+        user = super().save(commit=commit)
+
+        if commit:
+            from .models import CustomerProfile
+
+            CustomerProfile.objects.update_or_create(
+                user=user,
+                defaults={"phone": self.cleaned_data["phone"]},
+            )
+
+        return user
 
     def clean_phone(self):
         phone = self.cleaned_data["phone"]
@@ -350,6 +366,18 @@ class CustomerSignUpForm(forms.Form):
 
 class OrderDeliveryForm(forms.ModelForm):
 
+    customer_name = forms.CharField(
+        max_length=150,
+        required=True,
+        label="Full name",
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control",
+                "placeholder": "Name of the person receiving the order",
+            }
+        ),
+    )
+
     delivery_email = forms.EmailField(
         required=True,
         label="Email address",
@@ -425,6 +453,7 @@ class OrderDeliveryForm(forms.ModelForm):
         model = Order
 
         fields = [
+            "customer_name",
             "delivery_email",
             "delivery_phone",
             "district",
@@ -446,6 +475,17 @@ class OrderDeliveryForm(forms.ModelForm):
                 }
             ),
         }
+
+    def clean_customer_name(self):
+
+        name = " ".join(self.cleaned_data["customer_name"].split())
+
+        if len(name) < 3:
+            raise forms.ValidationError(
+                "Please enter your full name."
+            )
+
+        return name
 
     def clean_delivery_email(self):
 

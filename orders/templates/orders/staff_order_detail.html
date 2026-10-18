@@ -1,0 +1,260 @@
+{% extends "users/base.html" %}
+
+{% block title %}{{ order.order_number }} | GNT Partners{% endblock %}
+{% block page_title %}Order {{ order.order_number }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .so-head {
+        display: flex; justify-content: space-between; align-items: flex-start;
+        flex-wrap: wrap; gap: 14px;
+        background: linear-gradient(135deg, #1f3b5c, #315d87); color: #fff;
+        border-radius: 16px; padding: 22px 24px; margin-bottom: 20px;
+    }
+    .so-head h2 { margin: 0 0 6px; font-size: 24px; }
+    .so-head p { margin: 0; color: #dbeafe; font-size: 13px; }
+    .so-badge { display: inline-block; padding: 6px 14px; border-radius: 20px;
+        font-size: 12px; font-weight: 700; background: #fff; color: #1f3b5c; }
+
+    .so-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+        gap: 20px; align-items: start; }
+    .so-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
+        padding: 20px 22px; margin-bottom: 18px; box-shadow: 0 3px 14px rgba(0,0,0,.04); }
+    .so-card h3 { margin: 0 0 14px; font-size: 16px; color: #111827; }
+
+    .so-row { display: flex; justify-content: space-between; gap: 12px;
+        padding: 9px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+    .so-row:last-child { border-bottom: none; }
+    .so-row span:first-child { color: #6b7280; flex-shrink: 0; }
+    .so-row span:last-child { color: #111827; font-weight: 600; text-align: right; word-break: break-word; }
+
+    .so-items { width: 100%; border-collapse: collapse; }
+    .so-items th { text-align: left; font-size: 12px; text-transform: uppercase;
+        color: #6b7280; background: #f8fafc; padding: 10px 12px; }
+    .so-items td { padding: 12px; border-top: 1px solid #f1f5f9; font-size: 14px; vertical-align: middle; }
+    .so-prod { display: flex; align-items: center; gap: 12px; }
+    .so-prod img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #f1f5f9; }
+    .so-prod b { display: block; color: #111827; }
+    .so-prod small { color: #6b7280; }
+    .so-ok { color: #16a34a; font-weight: 600; }
+    .so-low { color: #dc2626; font-weight: 700; }
+    .so-total { display: flex; justify-content: space-between; align-items: center;
+        padding: 16px 12px 0; font-size: 20px; font-weight: 800; color: #111827; }
+
+    .so-note { background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+        border-radius: 10px; padding: 12px 14px; font-size: 14px; white-space: pre-line; }
+    .so-warn { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c;
+        border-radius: 10px; padding: 12px 14px; font-size: 14px; margin-bottom: 14px; }
+    .so-addr { margin: 0; padding: 0; list-style: none; }
+    .so-addr li { padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #111827; }
+    .so-addr li:last-child { border-bottom: none; }
+    .so-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .so-contact a { color: #1d4ed8; text-decoration: none; }
+    .so-contact a:hover { text-decoration: underline; }
+    .so-wa { display: inline-block; margin-top: 10px; padding: 8px 14px; border-radius: 8px;
+        background: #2563eb; color: #fff !important; font-size: 13px; font-weight: 600; text-decoration: none !important; }
+    .so-table-wrap { overflow-x: auto; }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .status-pending { background: #fffbeb; color: #b45309; }
+    .status-paid { background: #eff6ff; color: #1d4ed8; }
+    .status-delivered { background: #ecfdf5; color: #16a34a; }
+    .status-cancelled { background: #fef2f2; color: #dc2626; }
+
+        .so-grid > div { min-width: 0; }
+    .so-items { min-width: 520px; }
+    @media (max-width: 900px) { .so-grid { grid-template-columns: minmax(0, 1fr); } }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="so-head">
+    <div>
+        <h2>{{ order.order_number }}</h2>
+        <p>Placed {{ order.created_at|date:"d M Y, H:i" }} by {{ order.contact_name }}</p>
+    </div>
+    <span class="so-badge">{{ order.get_status_display }}</span>
+</div>
+
+<div class="so-grid">
+
+    <!-- LEFT: items, proofs -->
+    <div>
+
+        <div class="so-card">
+            <h3>Items ordered</h3>
+
+            {% if order.status == "pending" and not can_mark_paid %}
+                <div class="so-warn">
+                    Not enough stock for one or more items (marked in red).
+                    Record a purchase for them before marking this order as paid.
+                </div>
+            {% endif %}
+
+            <div class="so-table-wrap">
+                <table class="so-items">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Qty</th>
+                            <th>Price</th>
+                            <th>Amount</th>
+                            <th>In stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in rows %}
+                            <tr>
+                                <td>
+                                    <div class="so-prod">
+                                        {% if row.item.product.shop_images %}
+                                            <img src="{{ row.item.product.shop_images.0 }}" alt="">
+                                        {% else %}
+                                            <img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">
+                                        {% endif %}
+                                        <div>
+                                            <b>{{ row.item.product.item_name }}</b>
+                                            <small>
+                                                {% if row.item.product.brand %}{{ row.item.product.brand }}{% endif %}
+                                                {% if row.item.color %} · Colour: {{ row.item.color }}{% endif %}
+                                            </small>
+                                            {% if row.item.product.specification %}
+                                                <small style="display:block;">{{ row.item.product.specification }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><b>{{ row.item.quantity }}</b></td>
+                                <td>{{ row.item.price|floatformat:2 }}</td>
+                                <td><b>{{ row.item.amount|floatformat:2 }}</b></td>
+                                <td>
+                                    {% if row.short %}
+                                        <span class="so-low">{{ row.stock }} (short by {{ row.missing }})</span>
+                                    {% else %}
+                                        <span class="so-ok">{{ row.stock }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="so-total">
+                <span>Order total</span>
+                <span>{{ order.total|floatformat:2 }} RWF</span>
+            </div>
+        </div>
+
+        <div class="so-card">
+            <h3>Proof of payment</h3>
+            {% for proof in order.payment_proofs.all %}
+                <div class="so-row">
+                    <span>{{ proof.uploaded_at|date:"d M Y, H:i" }}</span>
+                    <span>
+                        {{ proof.get_payment_method_display|default:"Method not given" }}
+                        {% if proof.reference_note %}<br>Ref: {{ proof.reference_note }}{% endif %}
+                        <br><a href="{% url 'payment_proof_file' proof.id %}" target="_blank">Open file</a>
+                    </span>
+                </div>
+            {% empty %}
+                <p style="margin:0;color:#dc2626;font-size:14px;">
+                    The customer has not uploaded a proof of payment yet.
+                </p>
+            {% endfor %}
+        </div>
+
+        {% if order.notes %}
+            <div class="so-card">
+                <h3>Customer note</h3>
+                <div class="so-note">{{ order.notes }}</div>
+            </div>
+        {% endif %}
+
+        <div class="so-actions">
+            {% if receipt %}
+                <a href="{% url 'receipt_detail' receipt.pk %}" class="btn btn-primary">Receipt {{ receipt.number }}</a>
+            {% endif %}
+            {% if order.status == "pending" %}
+                <form method="POST" action="{% url 'mark_order_paid' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Mark as Paid</button>
+                </form>
+                <form method="POST" action="{% url 'cancel_order' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Cancel Order</button>
+                </form>
+            {% elif order.status == "paid" %}
+                <form method="POST" action="{% url 'mark_order_delivered' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Mark as Delivered</button>
+                </form>
+            {% endif %}
+            <a href="{% url 'manage_orders' %}" class="btn btn-secondary">← All orders</a>
+        </div>
+
+    </div>
+
+    <!-- RIGHT: customer, delivery, timeline -->
+    <div>
+
+        <div class="so-card so-contact">
+            <h3>Customer</h3>
+            <div class="so-row"><span>Full name</span><span>{{ order.contact_name }}</span></div>
+            <div class="so-row"><span>Username</span><span>{{ customer.username }}</span></div>
+            <div class="so-row">
+                <span>Phone</span>
+                <span>{% if order.contact_phone %}<a href="tel:{{ order.contact_phone }}">{{ order.contact_phone }}</a>{% else %}—{% endif %}</span>
+            </div>
+            <div class="so-row">
+                <span>Email</span>
+                <span>{% if order.contact_email %}<a href="mailto:{{ order.contact_email }}">{{ order.contact_email }}</a>{% else %}—{% endif %}</span>
+            </div>
+            <div class="so-row"><span>Account created</span><span>{{ customer.date_joined|date:"d M Y" }}</span></div>
+            <div class="so-row"><span>Orders placed</span><span>{{ orders_count }}</span></div>
+            <div class="so-row"><span>Paid so far</span><span>{{ spent|floatformat:2 }} RWF</span></div>
+            {% if order.whatsapp_number %}
+                <a class="so-wa" target="_blank" rel="noopener"
+                   href="https://wa.me/{{ order.whatsapp_number }}?text=Hello%20{{ order.contact_name|urlencode }}%2C%20about%20your%20order%20{{ order.order_number }}">
+                    Chat on WhatsApp
+                </a>
+            {% endif %}
+        </div>
+
+        <div class="so-card">
+            <h3>Delivery address</h3>
+            {% if order.address_lines %}
+                <ul class="so-addr">
+                    {% for line in order.address_lines %}<li>{{ line }}</li>{% endfor %}
+                </ul>
+            {% else %}
+                <p style="margin:0;color:#6b7280;font-size:14px;">No address given.</p>
+            {% endif %}
+        </div>
+
+        <div class="so-card">
+            <h3>Order history</h3>
+            <div class="so-row"><span>Placed</span><span>{{ order.created_at|date:"d M Y, H:i" }}</span></div>
+            <div class="so-row"><span>Paid</span><span>{% if order.paid_at %}{{ order.paid_at|date:"d M Y, H:i" }}{% else %}—{% endif %}</span></div>
+            <div class="so-row"><span>Delivered</span><span>{% if order.delivered_at %}{{ order.delivered_at|date:"d M Y, H:i" }}{% else %}—{% endif %}</span></div>
+            <div class="so-row"><span>Handled by</span><span>{% if order.processed_by %}{{ order.processed_by.username }}{% else %}—{% endif %}</span></div>
+        </div>
+
+        {% if previous_orders %}
+            <div class="so-card">
+                <h3>This customer's other orders</h3>
+                {% for o in previous_orders %}
+                    <div class="so-row">
+                        <span><a href="{% url 'order_detail' o.id %}">{{ o.order_number }}</a></span>
+                        <span>{{ o.total|floatformat:0 }} RWF
+                            <span class="status-badge status-{{ o.status }}">{{ o.get_status_display }}</span></span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

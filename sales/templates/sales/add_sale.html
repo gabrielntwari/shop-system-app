@@ -1,207 +1,181 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "users/base.html" %}
 
-    <title>Add Sale</title>
+{% block title %}Add Sale{% endblock %}
+{% block page_title %}Add Sale{% endblock %}
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+{% block extra_css %}{% include "sales/_receipt_css.html" %}{% endblock %}
 
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            min-height: 100vh;
-            padding: 40px 20px;
-        }
+{% block content %}
+<div class="rc rc-wrap">
 
-        .container {
-            max-width: 650px;
-            margin: auto;
-        }
+<a href="{% url 'dashboard' %}" style="font-size:14px;text-decoration:none;color:#1d4ed8">&larr; Back to dashboard</a>
+<p class="rc-hint" style="margin:10px 0 18px">Add every product the customer is taking. One save gives one receipt and reduces the stock of all products.</p>
 
-        .header {
-            margin-bottom: 25px;
-        }
+{% if errors %}
+<div class="rc-err">{% for e in errors %}<div>{{ e }}</div>{% endfor %}</div>
+{% endif %}
 
-        .header h1 {
-            font-size: 30px;
-            color: #1f2937;
-            margin-bottom: 8px;
-        }
+<form method="post" id="saleForm" autocomplete="off">
+{% csrf_token %}
+<div class="rc-grid">
 
-        .header p {
-            color: #6b7280;
-            font-size: 15px;
-        }
+<div class="rc-main">
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-        }
+<section class="rc-card">
+<h2>Customer</h2>
+<p class="rc-hint">Optional. Add a name or phone number if part of the sale will be paid later.</p>
+<div class="rc-fields">
+<div class="rc-f"><label for="cn">Customer name</label><input id="cn" name="customer_name" value="{{ form.customer_name }}"></div>
+<div class="rc-f"><label for="cp">Phone number</label><input id="cp" name="customer_phone" value="{{ form.customer_phone }}"></div>
+<div class="rc-f"><label for="ce">Email</label><input id="ce" type="email" name="customer_email" value="{{ form.customer_email }}"></div>
+</div>
+</section>
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #374151;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 15px;
-            background: white;
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none;
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-        }
-
-        .errorlist {
-            color: #dc2626;
-            list-style: none;
-            margin-top: 6px;
-            font-size: 14px;
-        }
-
-        .form-errors {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 25px;
-        }
-
-        .btn {
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-            flex: 1;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 20px 15px;
-            }
-
-            .card {
-                padding: 20px;
-            }
-
-            .buttons {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-
-    <div class="header">
-        <h1>Add Sale</h1>
-        <p>Record a new sale transaction.</p>
-    </div>
-
-    <div class="card">
-
-        {% if form.non_field_errors %}
-            <div class="form-errors">
-                {{ form.non_field_errors }}
-            </div>
-        {% endif %}
-
-        <form method="POST">
-
-            {% csrf_token %}
-
-            {% for field in form %}
-                <div class="form-group">
-
-                    {{ field.label_tag }}
-
-                    {{ field }}
-
-                    {% if field.errors %}
-                        {{ field.errors }}
-                    {% endif %}
-
-                </div>
-            {% endfor %}
-
-            <div class="buttons">
-
-                <a href="{% url 'dashboard' %}"
-                   class="btn btn-secondary">
-                    Back to Dashboard
-                </a>
-
-                <button type="submit"
-                        class="btn btn-primary">
-                    Add Sale
-                </button>
-
-            </div>
-
-        </form>
-
-    </div>
+<section class="rc-card">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+<h2 style="margin:0">Items</h2>
+<span class="rc-pill ok" id="summaryPill">0 products</span>
+</div>
+<div class="rc-tablewrap">
+<table class="rc-table" style="min-width:700px">
+<thead><tr><th style="width:44%">Product</th><th style="width:90px">Qty</th><th style="width:150px">Selling price</th><th class="r" style="width:130px">Line total</th><th style="width:44px"></th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+</div>
+<button type="button" id="addRow" style="margin-top:8px;width:100%;padding:13px;border:2px dashed #93c5fd;background:#f8fbff;color:#1d4ed8;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">+ Add another product</button>
+<p class="rc-hint" style="margin:10px 0 0;font-size:12px">Only products in stock are listed. A price below the product's minimum price is not accepted.</p>
+</section>
 
 </div>
 
-</body>
-</html>
+<aside class="rc-side">
+<section class="rc-card" style="display:flex;flex-direction:column;gap:14px">
+<h2 style="margin:0">Payment</h2>
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding-bottom:12px;border-bottom:1px solid #e5e7eb">
+<span style="font-size:14px;color:#6b7280">Sale total</span>
+<b style="font-size:26px" id="grand">0</b>
+</div>
+<div class="rc-f">
+<label for="paid">Amount paid now (RWF)</label>
+<input id="paid" name="paid" inputmode="numeric" value="{{ form.paid }}" style="font-size:18px;font-weight:700">
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:2px">
+<button type="button" class="rc-btn2" style="padding:6px 12px;font-size:12px;border-radius:20px" id="payFull">Full amount</button>
+<button type="button" class="rc-btn2" style="padding:6px 12px;font-size:12px;border-radius:20px" id="payHalf">Half</button>
+<button type="button" class="rc-btn2" style="padding:6px 12px;font-size:12px;border-radius:20px" id="payNone">Nothing yet (all credit)</button>
+</div>
+</div>
+<div class="rc-f">
+<label for="method">Payment method</label>
+<select id="method" name="method">
+{% for v,l in methods %}<option value="{{ v }}" {% if form.method == v %}selected{% endif %}>{{ l }}</option>{% endfor %}
+</select>
+</div>
+<div class="rc-balance" id="balBox">
+<div style="display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:space-between;align-items:baseline"><b style="font-size:13px" id="balLabel">Balance left as credit</b><b style="font-size:20px" id="bal">0</b></div>
+<p style="margin:6px 0 0;font-size:12px" id="balNote">The customer pays the rest later. Each payment is added to the receipt.</p>
+</div>
+<div class="rc-f" id="promiseBox">
+<label for="pd">Customer promises to pay the balance by (optional)</label>
+<input id="pd" type="date" name="promise_date" value="{{ form.promise_date }}">
+</div>
+<div class="rc-f">
+<label for="nt">Note on the receipt (optional)</label>
+<textarea id="nt" name="note" rows="2" maxlength="300">{{ form.note }}</textarea>
+</div>
+<button type="submit" class="rc-btn">Add Sale</button>
+<a href="{% url 'dashboard' %}" style="text-align:center;font-size:13px;color:#6b7280;text-decoration:none">Cancel</a>
+<p class="rc-hint" style="margin:0;text-align:center;font-size:12px">When you save, the stock of all products goes down automatically.</p>
+</section>
+</aside>
+
+</div>
+</form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  var products = {{ products_json|safe }};
+  var initial = {{ rows_json|safe }};
+  var byId = {}; products.forEach(function(p){ byId[p.id]=p; });
+  var tbody = document.getElementById('rows');
+  var paidEl = document.getElementById('paid');
+  var paidTouched = {% if form.paid != "" %}true{% else %}false{% endif %};
+
+  function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+  function num(s){ return parseFloat(String(s||'').replace(/,/g,''))||0; }
+
+  function row(r){
+    var tr = document.createElement('tr');
+    var opts = '<option value="">Select product</option>' + products.map(function(p){
+      return '<option value="'+p.id+'"'+(String(p.id)===String(r.product)?' selected':'')+'>'+
+        p.name.replace(/</g,'&lt;')+'</option>';
+    }).join('');
+    tr.innerHTML =
+      '<td><select name="product" aria-label="Product">'+opts+'</select><div class="hint" style="font-size:12px;color:#6b7280;margin-top:4px"></div></td>'+
+      '<td><input name="quantity" type="number" min="1" step="1" value="'+(r.quantity||1)+'" aria-label="Quantity"></td>'+
+      '<td><input name="price" inputmode="numeric" value="'+(r.price||'')+'" aria-label="Selling price"></td>'+
+      '<td class="r"><b class="lt">0</b></td>'+
+      '<td><button type="button" class="rm" aria-label="Remove this item" style="width:38px;height:38px;border:1px solid #e5e7eb;background:#fff;border-radius:8px;color:#b91c1c;font-size:18px;cursor:pointer">&times;</button></td>';
+    tbody.appendChild(tr);
+    var sel = tr.querySelector('select'), qty = tr.querySelector('[name=quantity]'), pr = tr.querySelector('[name=price]');
+    sel.addEventListener('change', function(){
+      var p = byId[sel.value];
+      if(p){ pr.value = p.price; }
+      update();
+    });
+    qty.addEventListener('input', update);
+    pr.addEventListener('input', update);
+    tr.querySelector('.rm').addEventListener('click', function(){
+      if(tbody.children.length>1){ tbody.removeChild(tr); } else { sel.value=''; pr.value=''; qty.value=1; }
+      update();
+    });
+  }
+
+  function update(){
+    var total=0, units=0, count=0;
+    Array.prototype.forEach.call(tbody.children, function(tr){
+      var sel=tr.querySelector('select'), q=num(tr.querySelector('[name=quantity]').value), pr=num(tr.querySelector('[name=price]').value);
+      var p=byId[sel.value], hint=tr.querySelector('.hint');
+      var lt=q*pr; tr.querySelector('.lt').textContent=fmt(lt);
+      if(p){
+        count++; units+=q; total+=lt;
+        var bad = (q>p.stock) ? ' - only '+p.stock+' left!' : (pr<p.min ? ' - below minimum price!' : '');
+        hint.textContent='In stock '+p.stock+' · minimum price '+fmt(p.min)+bad;
+        hint.style.color = bad ? '#b91c1c' : '#6b7280';
+      } else { hint.textContent=''; }
+    });
+    document.getElementById('summaryPill').textContent = count+' product'+(count===1?'':'s')+' · '+units+' unit'+(units===1?'':'s');
+    document.getElementById('grand').innerHTML = fmt(total)+' <span style="font-size:13px;color:#6b7280">RWF</span>';
+    if(!paidTouched){ paidEl.value = total ? fmt(total) : ''; }
+    var paid = Math.min(num(paidEl.value), total), bal = Math.max(total-num(paidEl.value),0);
+    var box=document.getElementById('balBox');
+    document.getElementById('bal').textContent = fmt(bal)+' RWF';
+    if(bal>0){
+      box.className='rc-balance';
+      document.getElementById('balLabel').textContent='Balance left as credit';
+      document.getElementById('balNote').textContent='The customer pays the rest later. Each payment is added to the receipt.';
+      document.getElementById('promiseBox').style.display='';
+    } else {
+      box.className='rc-balance ok';
+      document.getElementById('balLabel').textContent='Paid in full';
+      document.getElementById('balNote').textContent='No balance left.';
+      document.getElementById('promiseBox').style.display='none';
+    }
+    window._total = total;
+  }
+
+  initial.forEach(row);
+  document.getElementById('addRow').addEventListener('click', function(){ row({quantity:1}); update(); });
+  paidEl.addEventListener('input', function(){ paidTouched=true; update(); });
+  document.getElementById('payFull').addEventListener('click', function(){ paidTouched=false; update(); });
+  document.getElementById('payHalf').addEventListener('click', function(){ paidTouched=true; paidEl.value=fmt((window._total||0)/2); update(); });
+  document.getElementById('payNone').addEventListener('click', function(){ paidTouched=true; paidEl.value='0'; update(); });
+  document.getElementById('saleForm').addEventListener('keydown', function(e){
+    if(e.key==='Enter' && e.target.tagName==='INPUT'){ e.preventDefault(); }
+  });
+  update();
+})();
+</script>
+{% endblock %}

@@ -302,6 +302,18 @@
 
 
                 <a
+                    href="{% url 'manage_categories' %}"
+                    class="nav-link"
+                >
+
+                    <span>☰</span>
+
+                    Categories
+
+                </a>
+
+
+                <a
                     href="{% url 'owner_transactions' %}"
                     class="nav-link"
                 >
@@ -408,6 +420,18 @@
                     <span>▣</span>
 
                     Inventory
+
+                </a>
+
+
+                <a
+                    href="{% url 'manage_categories' %}"
+                    class="nav-link"
+                >
+
+                    <span>☰</span>
+
+                    Categories
 
                 </a>
 
@@ -674,85 +698,7 @@
     </main>
 
 
-    <!-- =================================================
-         DEVELOPER / CONTACT FOOTER
-    ================================================= -->
-
-    <footer class="site-footer">
-
-
-        <div class="footer-content">
-
-
-            <p>
-
-                If you need any other system,
-                contacts are below.
-
-            </p>
-
-
-            <div class="footer-contact">
-
-
-                <span>
-
-                    <strong>
-                        Developer:
-                    </strong>
-
-                    <p>
-                        NTWARI Modeste Avemaria
-                    </p>
-
-                </span>
-
-
-                <span>
-
-                    <strong>
-                        Email:
-                    </strong>
-
-                    <a href="mailto:modetse.avemaria@gmail.com">
-
-                        modetse.avemaria@gmail.com
-
-                    </a>
-
-                </span>
-
-
-                <span>
-
-                    <strong>
-                        Phone:
-                    </strong>
-
-                    <a href="tel:+250795538741">
-
-                        +250 795 538 741
-
-                    </a>
-
-                </span>
-
-
-            </div>
-
-        </div>
-
-
-        <div class="footer-bottom">
-
-            © {% now "Y" %}
-            NTWARI Modeste Avemaria.
-            All rights reserved.
-
-        </div>
-
-
-    </footer>
+        {% include "users/_site_footer.html" %}
 
 
 </div>

@@ -112,6 +112,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 
     'accounts',
     'users',
@@ -171,6 +172,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 "orders.context_processors.active_order_count",
+                "orders.context_processors.shop_config",
                 "users.context_processors.unread_message_count",
             ],
         },
@@ -286,3 +288,43 @@ MAILERS = {
 # =========================================================
 
 LOGIN_URL = "login"
+
+
+# =========================================================
+# SHOP (customer side) - static content, changed by editing here
+# and pushing. Empty social URLs are simply not shown.
+# =========================================================
+
+SHOP = {
+    "name": "GNT Partners",
+    "company": "GNT Partners Ltd",
+    "whatsapp": "250791816122",          # digits only, with country code
+    "phone": "+250 791 816 122",
+    "email": "gntpartners1@gmail.com",
+    "address": "Kigali, Rwanda",
+    "socials": {
+        "facebook": "https://www.facebook.com/profile.php?id=100064463491249",
+        "instagram": "https://www.instagram.com/gnt_trust?xtok=MW40YjVlZTNjcXRsOA==",
+        "tiktok": "https://www.tiktok.com/@gnt.trust?is_from_webapp=1&sender_device=pc",
+        "youtube": "https://youtube.com",
+        "linkedin": "https://www.linkedin.com/company/gnt-trust/",
+    },
+    # Hero slider. "image" is a path under static/ (e.g. "shop/slides/1.jpg");
+    # slides whose file does not exist yet are shown as colour slides.
+    "slides": [
+        {"title": "Quality products, Quality service",
+         "text": "AMATARA, IBIKORESHO BYAMASHANYARAZI byose tubikugezaho",
+         "image": "shop/slides/1.jpg"},
+        {"title": "YOU ARE ALL WELCOME!",
+         "text": " Get the best deal",
+         "image": "shop/slides/2.jpg"},
+        {"title": "MURAKAZA NEZA!",
+         "text": "Tubahe ibikoresho byiza ",
+         "image": "shop/slides/3.jpg"},
+    ],
+    # Optional background video (static/shop/background.mp4) and
+    # still picture for phones (static/shop/background.jpg).
+    "video": "shop/background.mp4",
+    "video_poster": "shop/background.jpg",
+    "default_message": "Hello, I would like to negotiate the price of this product.",
+}

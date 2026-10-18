@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "orders/shop_base.html" %}
 
 {% block title %}Order {{ order.order_number }} | GNT Partners{% endblock %}
 
@@ -281,7 +281,7 @@
 
                                 <td>
                                     <span class="detail-product">
-                                        {{ item.product.item_name }}
+                                        {{ item.product.item_name }}{% if item.color %} ({{ item.color }}){% endif %}
                                     </span>
                                 </td>
 
@@ -416,6 +416,31 @@
             </div>
 
 
+            <div class="detail-card" style="margin-top:18px;">
+                <div class="timeline-card">
+                    <h3>Delivery</h3>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Name</span>
+                        <span class="order-info-value">{{ order.contact_name }}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Phone</span>
+                        <span class="order-info-value">{{ order.contact_phone|default:"—" }}</span>
+                    </div>
+                    {% for line in order.address_lines %}
+                        <div class="order-info-item">
+                            <span class="order-info-value">{{ line }}</span>
+                        </div>
+                    {% endfor %}
+                    {% if order.notes %}
+                        <div class="order-info-item">
+                            <span class="order-info-label">Your note</span>
+                            <span class="order-info-value">{{ order.notes }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="detail-actions">
 
                 {% if order.status == "pending" %}
@@ -425,6 +450,18 @@
                         class="btn btn-primary"
                     >
                         Go to Payment
+                    </a>
+
+                {% endif %}
+
+                {% if receipt %}
+
+                    <a
+                        href="{% url 'order_receipt' order.id %}"
+                        class="btn btn-primary"
+                        target="_blank"
+                    >
+                        View / Print Receipt
                     </a>
 
                 {% endif %}

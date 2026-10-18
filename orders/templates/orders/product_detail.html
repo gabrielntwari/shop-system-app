@@ -1,0 +1,127 @@
+{% extends "orders/shop_base.html" %}
+{% load static %}
+
+{% block title %}{{ product.item_name }} - {{ SHOP.name }}{% endblock %}
+
+{% block meta %}
+{% with imgs=product.shop_images %}
+<meta name="description" content="{{ product.item_name }} - {{ product.shop_price|floatformat:'0g' }} RWF. {{ product.description|truncatechars:140 }}">
+<meta property="og:type" content="product">
+<meta property="og:title" content="{{ product.item_name }}{% if product.brand %} {{ product.brand }}{% endif %} - {{ product.shop_price|floatformat:'0g' }} RWF">
+<meta property="og:description" content="{{ product.description|default:'Negotiate your price on WhatsApp.'|truncatechars:160 }}">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if imgs %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ imgs.0 }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+{% url 'product_detail' product.id as purl %}
+<div class="wrap detail">
+
+    <nav class="crumbs">
+        <a href="{% url 'home' %}">Shop</a>
+        {% if product.category %} &rsaquo; <a href="{% url 'home' %}?c={{ product.category.id }}#products">{{ product.category.name }}</a>{% endif %}
+        &rsaquo; <span>{{ product.item_name }}</span>
+    </nav>
+
+    <div class="detail-grid">
+
+        <div class="gallery">
+            {% with imgs=product.shop_images %}
+            <div class="gallery-main" id="galMain">
+                {% if imgs %}<img src="{{ imgs.0 }}" alt="{{ product.item_name }}" id="galImg">{% else %}<span class="noimg">{{ product.item_name|slice:":1" }}</span>{% endif %}
+                {% if product.tier == "hot" %}<span class="badge hot">Hot</span>{% endif %}
+            </div>
+            {% if imgs|length > 1 %}
+            <div class="thumbs">
+                {% for u in imgs %}<button type="button" class="thumb {% if forloop.first %}on{% endif %}" data-src="{{ u }}"><img src="{{ u }}" alt=""></button>{% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div class="info">
+            {% if product.category %}<div class="card-cat">{{ product.category.name }}</div>{% endif %}
+            <h1>{{ product.item_name }}</h1>
+            {% if product.brand or product.specification %}
+            <p class="sub">{{ product.brand }}{% if product.brand and product.specification %} · {% endif %}{{ product.specification }}</p>
+            {% endif %}
+            <div class="price big">{{ product.shop_price|floatformat:"0g" }} <span>RWF</span></div>
+            <form method="post" action="{% url 'add_to_cart' product.id %}" class="buy">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ purl }}">
+
+                {% if product.colors.all %}
+                <div class="field-label">Colour: <b id="colorName">{{ product.colors.all.0.name }}</b></div>
+                <div class="swatches">
+                    {% for c in product.colors.all %}
+                    <label class="swatch" title="{{ c.name }}">
+                        <input type="radio" name="color" value="{{ c.name }}" data-name="{{ c.name }}" {% if forloop.first %}checked{% endif %}>
+                        <span style="background:{{ c.hex_code }}"></span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="field-label">Quantity</div>
+                <div class="qty">
+                    <button type="button" data-q="-1" aria-label="Less">−</button>
+                    <input type="number" name="quantity" value="1" min="1" id="qty">
+                    <button type="button" data-q="1" aria-label="More">+</button>
+                </div>
+
+                <div class="buy-actions">
+                    <button type="submit" class="btn blue lg">Add to cart</button>
+                    <a href="{{ purl }}" class="btn ghost lg" data-negotiate data-wa="{{ SHOP.whatsapp }}"
+                       data-name="{{ product.item_name }}{% if product.brand %} {{ product.brand }}{% endif %}" data-price="{{ product.shop_price|floatformat:'0' }}" data-url="{{ purl }}">Negotiate on WhatsApp</a>
+                </div>
+            </form>
+
+            {% if product.description %}
+            <h2 class="sec">Description</h2>
+            <p class="desc">{{ product.description|linebreaksbr }}</p>
+            {% endif %}
+
+            {% if product.specs.all %}
+            <h2 class="sec">Specifications</h2>
+            <table class="specs">
+                {% for sp in product.specs.all %}<tr><th>{{ sp.label }}</th><td>{{ sp.value }}</td></tr>{% endfor %}
+            </table>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if related %}
+    <h2 class="sec rel-title">You may also like</h2>
+    <div class="grid">
+        {% for p in related %}{% include "orders/_product_card.html" %}{% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var img = document.getElementById("galImg");
+    document.querySelectorAll(".thumb").forEach(function (t) {
+        t.addEventListener("click", function () {
+            img.src = t.dataset.src;
+            document.querySelectorAll(".thumb").forEach(function (x) { x.classList.remove("on"); });
+            t.classList.add("on");
+        });
+    });
+    var qty = document.getElementById("qty");
+    document.querySelectorAll("[data-q]").forEach(function (b) {
+        b.addEventListener("click", function () {
+            qty.value = Math.max(1, (parseInt(qty.value, 10) || 1) + parseInt(b.dataset.q, 10));
+        });
+    });
+    var cn = document.getElementById("colorName");
+    document.querySelectorAll('input[name="color"]').forEach(function (r) {
+        r.addEventListener("change", function () { cn.textContent = r.dataset.name; });
+    });
+})();
+</script>
+{% endblock %}

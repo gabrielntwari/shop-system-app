@@ -1,0 +1,25 @@
+{% url 'product_detail' p.id as purl %}
+<article class="card g{% if p.id|divisibleby:3 %}1{% elif p.id|add:"-1"|divisibleby:3 %}2{% else %}3{% endif %}">
+    <div class="phs" data-slider>
+        {% with imgs=p.shop_images %}
+            {% for u in imgs %}<img src="{{ u }}" alt="" loading="lazy" class="ph {% if forloop.first %}on{% endif %}">{% empty %}<span class="noimg">{{ p.item_name|slice:":1" }}</span>{% endfor %}
+        {% endwith %}
+    </div>
+    <a class="open" href="{{ purl }}" aria-label="{{ p.item_name }}"></a>
+    {% if p.tier == "hot" %}<span class="badge hot">Hot</span>{% elif p.tier == "standard" %}<span class="badge std">Standard</span>{% endif %}
+    <div class="cinfo">
+        <h3>{{ p.item_name }}{% if p.brand %} <small>{{ p.brand }}</small>{% endif %}</h3>
+        <div class="price">{{ p.shop_price|floatformat:"0g" }} <small>RWF</small></div>
+        {% if p.colors.all %}<div class="chips">{% for c in p.colors.all %}<span class="chip"><i style="background:{{ c.hex_code }}"></i>{{ c.name }}</span>{% endfor %}</div>{% endif %}
+        <div class="cbtns">
+            <a href="{{ purl }}" class="btn ghost" data-negotiate data-wa="{{ SHOP.whatsapp }}"
+               data-name="{{ p.item_name }}{% if p.brand %} {{ p.brand }}{% endif %}" data-price="{{ p.shop_price|floatformat:'0' }}" data-url="{{ purl }}">Negotiate</a>
+            <form method="post" action="{% url 'add_to_cart' p.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="quantity" value="1">
+    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+    <button type="submit" class="btn blue">Add to cart</button>
+</form>
+        </div>
+    </div>
+</article>

@@ -1,0 +1,54 @@
+{% extends "users/base.html" %}
+
+{% block title %}Categories | GNT Partners{% endblock %}
+
+{% block page_title %}Categories{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <p>Product categories shown in the shop side panel. Lower "Order" numbers appear first.</p>
+    </div>
+</div>
+
+<div class="card" style="padding:20px;margin-bottom:20px;">
+    <h3 style="margin-top:0">Add category</h3>
+    <form method="post" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
+        {% csrf_token %}
+        <div style="flex:2;min-width:200px">{{ form.name }}{{ form.name.errors }}</div>
+        <div style="width:110px">{{ form.position }}</div>
+        <button class="btn btn-primary" type="submit">Add</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr><th>Name</th><th>Order</th><th>Products</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+                {% for c in categories %}
+                <tr>
+                    <td><input class="form-control" form="cf{{ c.id }}" name="name" value="{{ c.name }}" maxlength="100" required></td>
+                    <td><input class="form-control" form="cf{{ c.id }}" type="number" min="0" name="position" value="{{ c.position }}" style="width:90px"></td>
+                    <td>{{ c.n }}</td>
+                    <td style="white-space:nowrap">
+                        <form id="cf{{ c.id }}" method="post" action="{% url 'edit_category' c.id %}" style="display:inline">
+                            {% csrf_token %}
+                            <button class="btn btn-primary" name="action" value="save" type="submit">Save</button>
+                            <button class="btn btn-secondary" name="action" value="delete" type="submit"
+                                    onclick="return confirm('Delete this category? Its products will become uncategorised.')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">No categories yet. Add your first one above.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

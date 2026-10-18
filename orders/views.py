@@ -1,18 +1,23 @@
-
+from datetime import timedelta
 from decimal import Decimal
-
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Case, Count, IntegerField, Q, Sum, Value, When
+from django.db.models.functions import Coalesce
+from django.core.paginator import Paginator
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from inventory.models import Product
-from sales.models import Sale
+from inventory.models import Category, Product
+from sales.models import Receipt, Sale
+from sales.services import create_receipt
 
 from .forms import (
     BusinessPaymentInfoForm,
@@ -22,6 +27,7 @@ from .forms import (
 )
 from .models import (
     BusinessPaymentInfo,
+    CustomerProfile,
     Order,
     OrderItem,
     PaymentProof,
@@ -50,15 +56,108 @@ def can_manage_orders(user):
 # PUBLIC PRODUCT CATALOG
 # ============================================================
 
+def shop_products(category=None, query=""):
+    """Products shown in the shop.
+
+    Ordering: Hot, then Standard, then the rest; inside each group the
+    best sellers of the last 30 days come first, then by name.
+    Stock is never used to hide or reorder products.
+    """
+
+    since = timezone.now() - timedelta(days=30)
+
+    qs = (
+        Product.objects.filter(show_in_shop=True)
+        .select_related("category")
+        .prefetch_related("photos", "colors")
+        .annotate(
+            sold_30=Coalesce(
+                Sum("sales__quantity", filter=Q(sales__date__gte=since)),
+                0,
+            ),
+            tier_rank=Case(
+                When(tier="hot", then=Value(0)),
+                When(tier="standard", then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            ),
+        )
+        .order_by("tier_rank", "-sold_30", "item_name")
+    )
+
+    if category:
+        qs = qs.filter(category=category)
+
+    if query:
+        qs = qs.filter(
+            Q(item_name__icontains=query)
+            | Q(brand__icontains=query)
+            | Q(specification__icontains=query)
+            | Q(category__name__icontains=query)
+        )
+
+    return qs
+
+
 def product_catalog(request):
 
-    products = Product.objects.all().order_by("item_name")
+    categories = Category.objects.annotate(
+        n=Count("products", filter=Q(products__show_in_shop=True))
+    ).filter(n__gt=0)
+    total_products = Product.objects.filter(show_in_shop=True).count()
+
+    selected = None
+    c = request.GET.get("c", "")
+    if c.isdigit():
+        selected = categories.filter(id=int(c)).first()
+
+    query = request.GET.get("q", "").strip()
+
+    page = Paginator(shop_products(selected, query), 12).get_page(
+        request.GET.get("page")
+    )
+
+    params = request.GET.copy()
+    params.pop("page", None)
 
     return render(
         request,
         "orders/catalog.html",
         {
-            "products": products,
+            "page": page,
+            "products": page.object_list,
+            "categories": categories,
+            "total_products": total_products,
+            "selected_category": selected,
+            "query": query,
+            "querystring": params.urlencode(),
+            "is_home": not selected and not query and page.number == 1,
+        },
+    )
+
+
+def product_detail(request, product_id):
+
+    product = get_object_or_404(
+        Product.objects.select_related("category").prefetch_related(
+            "photos", "specs", "colors"
+        ),
+        id=product_id,
+        show_in_shop=True,
+    )
+
+    related = (
+        shop_products(product.category).exclude(id=product.id)[:4]
+        if product.category_id
+        else []
+    )
+
+    return render(
+        request,
+        "orders/product_detail.html",
+        {
+            "product": product,
+            "related": related,
         },
     )
 
@@ -90,6 +189,11 @@ def customer_signup(request):
 
             user.groups.add(customer_group)
             user.save()
+
+            CustomerProfile.objects.update_or_create(
+                user=user,
+                defaults={"phone": form.cleaned_data["phone"]},
+            )
 
             # Keep the validated phone available for the current
             # session until a customer profile system is added.
@@ -133,6 +237,15 @@ def _get_cart(request):
     )
 
 
+def _cart_key(product_id, color=""):
+    return f"{product_id}|{color}" if color else str(product_id)
+
+
+def _split_cart_key(key):
+    pid, _, color = str(key).partition("|")
+    return pid, color
+
+
 def _build_cart_items(request):
     """
     Convert the session cart into complete product information
@@ -144,7 +257,9 @@ def _build_cart_items(request):
     items = []
     total = Decimal("0.00")
 
-    for product_id, quantity in cart.items():
+    for key, quantity in cart.items():
+
+        product_id, color = _split_cart_key(key)
 
         product = Product.objects.filter(
             id=product_id
@@ -161,7 +276,7 @@ def _build_cart_items(request):
         if quantity <= 0:
             continue
 
-        price = product.minimum_selling_price
+        price = product.shop_price
         amount = price * quantity
 
         total += amount
@@ -172,6 +287,8 @@ def _build_cart_items(request):
                 "quantity": quantity,
                 "price": price,
                 "amount": amount,
+                "color": color,
+                "key": key,
             }
         )
 
@@ -182,11 +299,31 @@ def _build_cart_items(request):
 # CART
 # ============================================================
 
-@login_required
+def _safe_next(request, default="product_catalog"):
+    target = request.POST.get("next", "")
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}
+    ):
+        return redirect(target)
+    return redirect(default)
+
+
+def _staff_blocked(request):
+    """Staff (owner/employee) cannot shop; tell them kindly."""
+    if request.user.is_authenticated and not is_customer(request.user):
+        messages.info(
+            request,
+            "Staff accounts cannot place orders. "
+            "Please use a customer account to shop.",
+        )
+        return True
+    return False
+
+
 def add_to_cart(request, product_id):
 
-    if not is_customer(request.user):
-        raise PermissionDenied
+    if _staff_blocked(request):
+        return redirect("product_catalog")
 
     product = get_object_or_404(
         Product,
@@ -212,55 +349,42 @@ def add_to_cart(request, product_id):
                 "Quantity must be at least 1.",
             )
 
-            return redirect("product_catalog")
+            return _safe_next(request)
 
-        current_cart_quantity = _get_cart(request).get(
-            str(product_id),
-            0,
-        )
+        color = request.POST.get("color", "").strip()
+        colors = list(product.colors.values_list("name", flat=True))
 
-        try:
-            current_cart_quantity = int(
-                current_cart_quantity
-            )
-        except (TypeError, ValueError):
-            current_cart_quantity = 0
+        if colors:
+            if color not in colors:
+                color = colors[0]
+        else:
+            color = ""
 
-        requested_total_quantity = (
-            current_cart_quantity + quantity
-        )
-
-        if requested_total_quantity > product.current_stock:
-
-            messages.error(
-                request,
-                (
-                    f"Only {product.current_stock} units "
-                    f"of {product.item_name} are available."
-                ),
-            )
-
-            return redirect("product_catalog")
-
+        key = _cart_key(product_id, color)
         cart = _get_cart(request)
 
-        cart[str(product_id)] = requested_total_quantity
+        try:
+            current = int(cart.get(key, 0))
+        except (TypeError, ValueError):
+            current = 0
+
+        cart[key] = current + quantity
 
         request.session.modified = True
 
+        label = f"{product.item_name} ({color})" if color else product.item_name
         messages.success(
             request,
-            f"Added {product.item_name} to your cart.",
+            f"Added {label} to your cart.",
         )
 
-    return redirect("product_catalog")
+    return _safe_next(request)
 
 
-@login_required
 def view_cart(request):
 
-    if not is_customer(request.user):
-        raise PermissionDenied
+    if _staff_blocked(request):
+        return redirect("product_catalog")
 
     items, total = _build_cart_items(request)
 
@@ -274,16 +398,17 @@ def view_cart(request):
     )
 
 
-@login_required
 def remove_from_cart(request, product_id):
 
-    if not is_customer(request.user):
-        raise PermissionDenied
+    if _staff_blocked(request):
+        return redirect("product_catalog")
 
     cart = _get_cart(request)
 
+    color = request.POST.get("color") or request.GET.get("c", "")
+
     cart.pop(
-        str(product_id),
+        _cart_key(product_id, color),
         None,
     )
 
@@ -296,11 +421,22 @@ def remove_from_cart(request, product_id):
 # CHECKOUT -> CREATE ORDER
 # ============================================================
 
-@login_required
 def checkout(request):
 
-    if not is_customer(request.user):
-        raise PermissionDenied
+    # The account is only asked for here, at the last step.
+    if not request.user.is_authenticated:
+        messages.info(
+            request,
+            "Sign in or create an account to place your order. "
+            "Your cart is saved.",
+        )
+        return redirect(
+            f"{reverse('login')}?role=customer"
+            f"&next={reverse('checkout')}"
+        )
+
+    if _staff_blocked(request):
+        return redirect("product_catalog")
 
     cart = _get_cart(request)
 
@@ -358,9 +494,19 @@ def checkout(request):
 
                     order.save()
 
+                    # Keep the phone on the account for next time.
+                    profile, _ = CustomerProfile.objects.get_or_create(
+                        user=request.user
+                    )
+                    if not profile.phone:
+                        profile.phone = order.delivery_phone
+                        profile.save(update_fields=["phone"])
+
                     # Re-read the cart from the session and validate
                     # every product before creating order items.
-                    for product_id, quantity in cart.items():
+                    for cart_key, quantity in cart.items():
+
+                        product_id, color = _split_cart_key(cart_key)
 
                         product = get_object_or_404(
                             Product,
@@ -388,7 +534,8 @@ def checkout(request):
                             order=order,
                             product=product,
                             quantity=quantity,
-                            price=product.minimum_selling_price,
+                            price=product.shop_price,
+                            color=color,
                         )
 
                         item.full_clean()
@@ -441,19 +588,18 @@ def checkout(request):
 
     else:
 
-        # Pre-fill email from the logged-in customer's account.
+        # Pre-fill from the logged-in customer's account.
+        profile = getattr(request.user, "customer_profile", None)
+
         initial_data = {
+            "customer_name": request.user.get_full_name(),
             "delivery_email": request.user.email,
+            "delivery_phone": (
+                profile.phone
+                if profile and profile.phone
+                else request.session.get("customer_phone", "")
+            ),
         }
-
-        # If the phone was supplied during signup, use it here.
-        signup_phone = request.session.get(
-            "customer_phone",
-            "",
-        )
-
-        if signup_phone:
-            initial_data["delivery_phone"] = signup_phone
 
         form = OrderDeliveryForm(
             initial=initial_data
@@ -595,6 +741,66 @@ def my_orders(request):
 
 
 # ============================================================
+# STAFF ORDER DETAIL (everything an employee/owner needs)
+# ============================================================
+
+def _staff_order_context(order):
+    """Customer, items (with stock check) and history for one order."""
+
+    customer = order.customer
+    profile = getattr(customer, "customer_profile", None)
+
+    rows = []
+    can_mark_paid = True
+
+    for item in order.items.select_related("product"):
+
+        stock = item.product.current_stock
+        short = stock < item.quantity
+
+        if short:
+            can_mark_paid = False
+
+        rows.append(
+            {
+                "item": item,
+                "stock": stock,
+                "short": short,
+                "missing": max(0, item.quantity - stock),
+            }
+        )
+
+    other_orders = Order.objects.filter(customer=customer)
+
+    spent = sum(
+        (
+            o.total
+            for o in other_orders.filter(
+                status__in=["paid", "delivered"]
+            ).prefetch_related("items")
+        ),
+        0,
+    )
+
+    return {
+        "order": order,
+        "customer": customer,
+        "profile": profile,
+        "rows": rows,
+        "can_mark_paid": can_mark_paid,
+        "receipt": Receipt.objects.filter(
+            order_number=order.order_number
+        ).first(),
+        "orders_count": other_orders.count(),
+        "spent": spent,
+        "previous_orders": (
+            other_orders.exclude(id=order.id)
+            .order_by("-created_at")[:5]
+        ),
+    }
+
+
+# ============================================================
 # ORDER DETAIL
 # ============================================================
 
@@ -615,11 +821,61 @@ def order_detail(request, order_id):
     ):
         raise PermissionDenied
 
+    if can_manage_orders(request.user):
+        return render(
+            request,
+            "orders/staff_order_detail.html",
+            _staff_order_context(order),
+        )
+
     return render(
         request,
         "orders/order_detail.html",
         {
             "order": order,
+            "receipt": Receipt.objects.filter(
+                order_number=order.order_number
+            ).first(),
+        },
+    )
+
+
+# ============================================================
+# ORDER RECEIPT (customer who ordered, or staff)
+# ============================================================
+
+@login_required
+def order_receipt(request, order_id):
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if (
+        order.customer != request.user
+        and not can_manage_orders(request.user)
+    ):
+        raise PermissionDenied
+
+    receipt = Receipt.objects.filter(
+        order_number=order.order_number
+    ).first()
+
+    if receipt is None:
+        messages.info(
+            request,
+            "Your receipt will be ready once your payment is confirmed.",
+        )
+        return redirect("order_detail", order_id=order.id)
+
+    return render(
+        request,
+        "sales/receipt_print.html",
+        {
+            "receipt": receipt,
+            "lines": receipt.lines,
+            "payments": receipt.payments.all(),
+            "size": "80" if request.GET.get("size") == "80" else "a4",
+            "back_url": reverse("order_detail", args=[order.id]),
+            "back_label": "Back to order",
         },
     )
 
@@ -687,14 +943,28 @@ def manage_orders(request):
         Order.objects
         .select_related(
             "customer",
+            "customer__customer_profile",
             "processed_by",
         )
         .prefetch_related(
-            "items",
+            "items__product",
             "payment_proofs",
         )
         .order_by("-created_at")
     )
+
+    query = request.GET.get("q", "").strip()
+
+    if query:
+        orders = orders.filter(
+            Q(order_number__icontains=query)
+            | Q(customer_name__icontains=query)
+            | Q(customer__username__icontains=query)
+            | Q(customer__first_name__icontains=query)
+            | Q(customer__last_name__icontains=query)
+            | Q(delivery_phone__icontains=query)
+            | Q(delivery_email__icontains=query)
+        )
 
     status = request.GET.get(
         "status",
@@ -723,6 +993,7 @@ def manage_orders(request):
         {
             "orders": orders,
             "selected_status": status,
+            "query": query,
         },
     )
 
@@ -781,24 +1052,29 @@ def mark_order_paid(request, order_id):
             # Create sales records for the paid order
             # ------------------------------------------------
 
-            for item in order.items.all():
+            lines = [
+                (item.product, item.quantity, item.price)
+                for item in order.items.all()
+            ]
 
-                sale = Sale(
-                    product=item.product,
-                    employee=request.user,
-                    quantity=item.quantity,
-                    selling_price=item.price,
-                    customer_name=(
-                        order.customer.get_full_name()
-                        or order.customer.username
-                    ),
-                    customer_phone=order.delivery_phone,
-                    payment_status="paid",
-                    payment_method=payment_method,
-                )
-
-                sale.full_clean()
-                sale.save()
+            # One receipt for the whole order, paid in full.
+            # This also reduces the stock of every product.
+            create_receipt(
+                user=request.user,
+                lines=lines,
+                paid=sum(
+                    (q * pr for _, q, pr in lines), Decimal(0)
+                ),
+                method=payment_method,
+                customer_name=(
+                    order.contact_name
+                    or order.customer.get_full_name()
+                    or order.customer.username
+                ),
+                customer_email=order.contact_email,
+                customer_phone=order.delivery_phone,
+                order_number=order.order_number,
+            )
 
             # ------------------------------------------------
             # Update order

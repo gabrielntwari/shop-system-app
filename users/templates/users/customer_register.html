@@ -16,6 +16,7 @@
             <p>Register to browse products and place orders.</p>
         </div>
         <form method="post">
+             {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}  
             {% csrf_token %}
             {% if form.non_field_errors %}<div class="error-message">{{ form.non_field_errors }}</div>{% endif %}
             {% for field in form %}
@@ -27,8 +28,13 @@
             {% endfor %}
             <button class="btn btn-primary" type="submit">Create Account</button>
         </form>
-        <div class="login-register-link"><span>Already have an account?</span> <a href="{% url 'login' %}">Login</a></div>
+        <div class="login-register-link"><span>Already have an account?</span>   <a href="{% url 'login' %}?role=customer{% if next %}&next={{ next|urlencode }}{% endif %}">Login</a></div>
     </div>
 </div>
+{% include "users/_site_footer.html" %}
+<style>.login-page{background:transparent!important;position:relative;z-index:1}</style>
+<canvas id="netbg" aria-hidden="true"></canvas>
+<script src="{% static 'js/netbg.js' %}"></script>
+
 </body>
 </html>

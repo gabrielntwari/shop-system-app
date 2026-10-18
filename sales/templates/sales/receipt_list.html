@@ -1,0 +1,62 @@
+{% extends "users/base.html" %}
+{% load humanize %}
+
+{% block title %}Receipts{% endblock %}
+{% block page_title %}Receipts{% endblock %}
+{% block extra_css %}{% include "sales/_receipt_css.html" %}{% endblock %}
+
+{% block content %}
+<div class="rc rc-wrap">
+
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px">
+<p class="rc-hint" style="margin:0">Every counter sale and every paid website order, with what is still owed.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<a class="rc-btn2" href="{% if request.user.groups.all.0.name == 'owner' %}{% url 'owner_transactions' %}{% else %}{% url 'employee_transactions' %}{% endif %}">&larr; Transactions</a>
+<a href="{% url 'add_sale' %}" class="rc-btn2" style="background:#2563eb;color:#fff;border-color:#2563eb">+ Add Sale</a>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:18px">
+<div class="rc-card" style="padding:18px 20px"><div class="rc-hint" style="margin:0;text-transform:uppercase;font-size:12px">Sold today</div><div style="font-size:24px;font-weight:800;margin-top:6px">{{ sold_today|floatformat:0|intcomma }} <small style="font-size:12px;color:#6b7280">RWF</small></div><div class="rc-hint" style="margin:2px 0 0;font-size:12px">{{ today_count }} receipt{{ today_count|pluralize }}</div></div>
+<div class="rc-card" style="padding:18px 20px"><div class="rc-hint" style="margin:0;text-transform:uppercase;font-size:12px">Collected today</div><div style="font-size:24px;font-weight:800;margin-top:6px">{{ collected_today|floatformat:0|intcomma }} <small style="font-size:12px;color:#6b7280">RWF</small></div><div class="rc-hint" style="margin:2px 0 0;font-size:12px">including balances paid today</div></div>
+<div class="rc-card" style="padding:18px 20px;background:#fff7ed;border-color:#fdba74;color:#9a3412"><div style="margin:0;text-transform:uppercase;font-size:12px">Customers still owe</div><div style="font-size:24px;font-weight:800;margin-top:6px">{{ owing_total|floatformat:0|intcomma }} <small style="font-size:12px">RWF</small></div><div style="margin:2px 0 0;font-size:12px">across {{ owing_count }} receipt{{ owing_count|pluralize }}</div></div>
+</div>
+
+<section class="rc-card">
+<form method="get" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px">
+<div style="display:flex;flex-wrap:wrap;gap:8px;flex-grow:1">
+<a href="?filter=all&q={{ q|urlencode }}" class="rc-pill" style="padding:7px 14px;text-decoration:none;{% if filter == 'all' %}background:#1F3B5C;color:#fff{% else %}background:#f3f4f6;color:#374151{% endif %}">All</a>
+<a href="?filter=due&q={{ q|urlencode }}" class="rc-pill" style="padding:7px 14px;text-decoration:none;{% if filter == 'due' %}background:#1F3B5C;color:#fff{% else %}background:#f3f4f6;color:#374151{% endif %}">Balance due</a>
+<a href="?filter=paid&q={{ q|urlencode }}" class="rc-pill" style="padding:7px 14px;text-decoration:none;{% if filter == 'paid' %}background:#1F3B5C;color:#fff{% else %}background:#f3f4f6;color:#374151{% endif %}">Paid in full</a>
+<a href="?filter=web&q={{ q|urlencode }}" class="rc-pill" style="padding:7px 14px;text-decoration:none;{% if filter == 'web' %}background:#1F3B5C;color:#fff{% else %}background:#f3f4f6;color:#374151{% endif %}">Website orders</a>
+</div>
+<input type="hidden" name="filter" value="{{ filter }}">
+<input type="search" name="q" value="{{ q }}" placeholder="Search receipt number, customer name or phone" style="max-width:340px">
+<button class="rc-btn2" type="submit">Search</button>
+</form>
+
+<div class="rc-tablewrap">
+<table class="rc-table" style="min-width:900px">
+<thead><tr><th>Receipt</th><th>Date</th><th>Customer</th><th>Items</th><th class="r">Total</th><th class="r">Paid</th><th class="r">Balance</th><th>Status</th><th></th></tr></thead>
+<tbody>
+{% for r in receipts %}
+<tr>
+<td><b>{{ r.number }}</b></td>
+<td style="color:#6b7280">{{ r.created_at|date:"d M Y" }}</td>
+<td><b style="font-weight:600">{{ r.customer_name|default:"Walk-in customer" }}</b><div class="rc-hint" style="margin:0;font-size:12px">{{ r.source_label }}{% if r.employee %} · {{ r.employee.username }}{% endif %}</div></td>
+<td>{{ r.items_count }}</td>
+<td class="r">{{ r.total|floatformat:0|intcomma }}</td>
+<td class="r">{{ r.paid|floatformat:0|intcomma }}</td>
+<td class="r" style="font-weight:700;{% if r.balance > 0 %}color:#9a3412{% else %}color:#6b7280{% endif %}">{{ r.balance|floatformat:0|intcomma }}</td>
+<td>{% if r.balance > 0 %}<span class="rc-pill due">Balance due</span>{% else %}<span class="rc-pill ok">Paid in full</span>{% endif %}</td>
+<td class="rc-links"><a href="{% url 'receipt_detail' r.pk %}">View</a></td>
+</tr>
+{% empty %}
+<tr><td colspan="9" style="text-align:center;color:#6b7280;padding:30px">No receipts found.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</section>
+</div>
+{% endblock %}

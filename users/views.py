@@ -1,3 +1,6 @@
+import logging
+import os
+
 from django.contrib.auth.models import Group, User
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
@@ -14,15 +17,39 @@ from sales.models import Sale
 from expenses.models import Expense, OwnerWithdrawal
 
 
-def get_client_ip(request):
+logger = logging.getLogger(__name__)
 
+
+def get_client_ip(request):
+    """
+    Real visitor IP, used by the login lockout.
+
+    On Render the proxy APPENDS the visitor's IP to X-Forwarded-For, so
+    anything a visitor types into that header stays at the FRONT of the
+    list and cannot be trusted. We count from the END instead.
+
+    PROXY_HOPS (environment variable, default 2) = how many entries at
+    the end of the list were added by Render itself (the last one is the
+    proxy, the one before it is the visitor).
+    """
+
+    remote_addr = request.META.get("REMOTE_ADDR", "unknown")
     forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
 
-    if forwarded_for:
-        # The client's IP is the first one in the list when behind a proxy/load balancer.
-        return forwarded_for.split(",")[0].strip()
+    if not forwarded_for:
+        return remote_addr
 
-    return request.META.get("REMOTE_ADDR", "unknown")
+    parts = [p.strip() for p in forwarded_for.split(",") if p.strip()]
+
+    try:
+        hops = max(1, int(os.environ.get("PROXY_HOPS", "2")))
+    except ValueError:
+        hops = 2
+
+    if len(parts) >= hops:
+        return parts[-hops]
+
+    return parts[0] if parts else remote_addr
 
 
 # =========================================================
@@ -48,6 +75,19 @@ def get_user_role(user):
 # =========================================================
 # LOGIN
 # =========================================================
+def _safe_next_url(request):
+    """Return a same-site 'next' address from the request, or ''."""
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    target = request.POST.get("next") or request.GET.get("next") or ""
+    if target and url_has_allowed_host_and_scheme(
+        target, allowed_hosts={request.get_host()}
+    ):
+        return target
+    return ""
+
+
+
 
 def login_view(request):
 
@@ -66,6 +106,7 @@ def login_view(request):
                     f"Please try again in {attempt.seconds_remaining} seconds."
                 ),
                 "locked": True,
+                "selected_role": request.POST.get("role", "").strip(),
             })
 
         username = request.POST.get("username", "").strip()
@@ -82,6 +123,7 @@ def login_view(request):
             return render(request, "users/login.html", {
                 "error": "Please select how you are logging in.",
                 "selected_role": selected_role,
+                "next": _safe_next_url(request),
             })
 
         user = authenticate(
@@ -104,14 +146,19 @@ def login_view(request):
                             f"Please select the correct login type."
                         ),
                         "selected_role": selected_role,
+                        "next": _safe_next_url(request),
                     }
                 )
 
             attempt.register_success()
             login(request, user)
+            next_url = _safe_next_url(request)
+            if next_url and actual_role == "customer":
+                return redirect(next_url)
             return redirect("dashboard")
 
         attempt.register_failure()
+        logger.warning("Failed login attempt from IP %s", client_ip)
 
         if attempt.is_locked:
             return render(request, "users/login.html", {
@@ -120,6 +167,7 @@ def login_view(request):
                     f"Please try again in {attempt.seconds_remaining} seconds."
                 ),
                 "locked": True,
+                "selected_role": selected_role,
             })
 
         return render(
@@ -128,11 +176,19 @@ def login_view(request):
             {
                 "error": "Invalid username or password.",
                 "selected_role": selected_role,
+                "next": _safe_next_url(request),
             }
         )
 
-    return render(request, "users/login.html")
+    role = request.GET.get("role", "")
+    if role not in ("customer", "employee", "owner"):
+        role = ""
 
+    return render(
+        request,
+        "users/login.html",
+        {"selected_role": role, "next": _safe_next_url(request)},
+    )
 
 # =========================================================
 # CUSTOMER REGISTRATION
@@ -165,7 +221,7 @@ def customer_register(request):
 
 def logout_view(request):
     logout(request)
-    return redirect("login")
+    return redirect("home")
 
 
 # =========================================================

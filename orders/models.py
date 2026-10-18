@@ -111,6 +111,31 @@ class BusinessPaymentInfo(models.Model):
         return f"Payment info for {self.business_name}"
 
 
+class CustomerProfile(models.Model):
+    """
+    Extra details about a customer account (the phone number given
+    at registration). Staff see these on every order.
+    """
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="customer_profile",
+    )
+
+    phone = models.CharField(
+        max_length=30,
+        blank=True,
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"Profile of {self.user.username}"
+
+
 class Order(models.Model):
 
     STATUS_CHOICES = [
@@ -136,6 +161,12 @@ class Order(models.Model):
     # ==========================================================
     # CUSTOMER DELIVERY CONTACT
     # ==========================================================
+
+    customer_name = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text="Full name of the person who placed the order.",
+    )
 
     delivery_email = models.EmailField(
         max_length=254,
@@ -232,6 +263,45 @@ class Order(models.Model):
         )
 
     @property
+    def contact_name(self):
+        """Best available name for the customer."""
+        return (
+            self.customer_name
+            or self.customer.get_full_name()
+            or self.customer.username
+        )
+
+    @property
+    def contact_phone(self):
+        """Phone given on the order, else the one saved on the account."""
+        if self.delivery_phone:
+            return self.delivery_phone
+        profile = getattr(self.customer, "customer_profile", None)
+        return profile.phone if profile else ""
+
+    @property
+    def contact_email(self):
+        return self.delivery_email or self.customer.email
+
+    @property
+    def whatsapp_number(self):
+        """Phone in international digits for a wa.me link."""
+        digits = "".join(ch for ch in self.contact_phone if ch.isdigit())
+        if digits.startswith("0"):
+            digits = "250" + digits[1:]
+        return digits
+
+    @property
+    def address_lines(self):
+        """Delivery address split into 'Label: value' lines."""
+        parts = [
+            part.strip()
+            for part in (self.delivery_address or "").split(";")
+            if part.strip()
+        ]
+        return parts
+
+    @property
     def latest_proof(self):
         return (
             self.payment_proofs
@@ -280,6 +350,12 @@ class OrderItem(models.Model):
         ),
     )
 
+    color = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Colour chosen by the customer (if the product has colours).",
+    )
+
     @property
     def amount(self):
         if self.quantity is None or self.price is None:
@@ -293,16 +369,6 @@ class OrderItem(models.Model):
         if self.quantity is not None and self.quantity <= 0:
             errors["quantity"] = (
                 "Quantity must be greater than 0."
-            )
-
-        if (
-            self.product_id
-            and self.quantity is not None
-            and self.quantity > self.product.current_stock
-        ):
-            errors["quantity"] = (
-                f"Only {self.product.current_stock} units of "
-                f"{self.product.item_name} are currently available."
             )
 
         if errors:

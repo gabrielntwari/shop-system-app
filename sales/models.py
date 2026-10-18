@@ -69,6 +69,15 @@ class Sale(models.Model):
         auto_now_add=True
     )
 
+    # The receipt this line belongs to (older sales have none).
+    receipt = models.ForeignKey(
+        "sales.Receipt",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sales",
+    )
+
     # ==========================================================
     # TOTAL SALE
     # ==========================================================
@@ -211,3 +220,89 @@ class Sale(models.Model):
     def __str__(self):
 
         return f"{self.product} - {self.quantity}"
+
+# ==============================================================
+# RECEIPTS  (one receipt groups many Sale lines)
+# ==============================================================
+
+class Receipt(models.Model):
+
+    employee = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="receipts",
+    )
+    customer_name = models.CharField(max_length=200, blank=True)
+    customer_email = models.EmailField(blank=True)
+    customer_phone = models.CharField(max_length=30, blank=True)
+
+    # Filled when the receipt comes from a website order.
+    order_number = models.CharField(max_length=30, blank=True)
+
+    note = models.CharField(max_length=300, blank=True)
+    promise_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    @property
+    def number(self):
+        return f"RCT-{self.pk:04d}"
+
+    @property
+    def lines(self):
+        return self.sales.select_related("product").order_by("id")
+
+    @property
+    def total(self):
+        return sum((s.total_sales() for s in self.sales.all()), 0)
+
+    @property
+    def paid(self):
+        return sum((p.amount for p in self.payments.all()), 0)
+
+    @property
+    def balance(self):
+        return self.total - self.paid
+
+    @property
+    def is_paid(self):
+        return self.balance <= 0
+
+    @property
+    def items_count(self):
+        return self.sales.count()
+
+    @property
+    def units_count(self):
+        return sum(s.quantity for s in self.sales.all())
+
+    @property
+    def source_label(self):
+        if self.order_number:
+            return f"Website order {self.order_number}"
+        return "Counter sale"
+
+    def __str__(self):
+        return self.number
+
+
+class ReceiptPayment(models.Model):
+
+    receipt = models.ForeignKey(
+        Receipt, on_delete=models.CASCADE, related_name="payments"
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_method = models.CharField(
+        max_length=30, choices=Sale.PAYMENT_METHOD_CHOICES, blank=True
+    )
+    recorded_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["date", "id"]
+
+    def __str__(self):
+        return f"{self.receipt.number} payment {self.amount}"

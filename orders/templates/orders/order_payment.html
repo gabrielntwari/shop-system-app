@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "orders/shop_base.html" %}
 
 {% block title %}Complete Payment | GNT Partners{% endblock %}
 {% block page_title %}Complete Payment{% endblock %}
@@ -411,7 +411,7 @@
                                 <tr>
 
                                     <td>
-                                        {{ item.product.item_name }}
+                                        {{ item.product.item_name }}{% if item.color %} ({{ item.color }}){% endif %}
 
                                         {% if item.product.brand %}
                                             <br>

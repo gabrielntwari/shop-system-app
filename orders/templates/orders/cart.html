@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "orders/shop_base.html" %}
 
 {% block title %}My Cart | GNT Partners{% endblock %}
 {% block page_title %}My Cart{% endblock %}
@@ -214,7 +214,7 @@
 
                                 <td>
                                     <div class="cart-product">
-                                        {{ item.product.item_name }}
+                                        {{ item.product.item_name }}{% if item.color %} <small>({{ item.color }})</small>{% endif %}
                                     </div>
 
                                     {% if item.product.brand %}
@@ -245,6 +245,7 @@
                                     >
 
                                         {% csrf_token %}
+                                        <input type="hidden" name="color" value="{{ item.color }}">
 
                                         <button
                                             type="submit"

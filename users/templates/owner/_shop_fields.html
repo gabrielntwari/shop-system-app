@@ -1,0 +1,188 @@
+<!-- ==========================================
+     SHOP DISPLAY (what customers see)
+=========================================== -->
+
+<style>
+    .shop-rows { display: grid; gap: 10px; margin-bottom: 10px; }
+    .shop-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: center; }
+    .shop-row.color-row { grid-template-columns: 1fr 70px auto; }
+    .shop-row .color-input { width: 100%; height: 42px; padding: 2px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; }
+    .shop-row.is-deleted { display: none; }
+    .row-remove { border: 0; background: #fef2f2; color: #dc2626; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-weight: 700; }
+    .row-add { border: 1px dashed #9ca3af; background: #fff; color: #1f3b5c; border-radius: 8px; padding: 9px 14px; cursor: pointer; font-weight: 700; }
+    .check-line { display: flex; align-items: center; gap: 8px; }
+    .check-line input { width: 18px; height: 18px; }
+    @media (max-width: 600px) {
+        .shop-row, .shop-row.color-row { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="form-section">
+
+    <div class="form-section-title">
+        <h3>Shop Display</h3>
+        <p>How this product appears to customers in the online shop.</p>
+    </div>
+
+    <div class="form-grid">
+
+        <div class="form-group">
+            <label for="{{ form.category.id_for_label }}">Category</label>
+            {{ form.category }}
+            <small class="form-help">
+                Add categories in the <a href="{% url 'manage_categories' %}">Categories</a> page.
+            </small>
+            {{ form.category.errors }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.display_price.id_for_label }}">Display Price (RWF)</label>
+            {{ form.display_price }}
+            <small class="form-help">
+                The price shown in the shop. Leave empty to show the minimum selling price.
+                Customers negotiate down to the minimum price.
+            </small>
+            {{ form.display_price.errors }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.tier.id_for_label }}">Shop Rank</label>
+            {{ form.tier }}
+            <small class="form-help">Hot products are shown first, then Standard, then the rest by best sellers.</small>
+            {{ form.tier.errors }}
+        </div>
+
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <label class="check-line">
+                {{ form.show_in_shop }} Show this product in the shop
+            </label>
+            {{ form.show_in_shop.errors }}
+        </div>
+
+        <div class="form-group full-width">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="form-section">
+
+    <div class="form-section-title">
+        <h3>Specifications</h3>
+        <p>Details customers see after opening the product (for example Screen, Memory, Warranty).</p>
+    </div>
+
+    {{ specs.management_form }}
+    {{ specs.non_form_errors }}
+
+    <div class="shop-rows" id="specRows">
+        {% for f in specs %}
+            <div class="shop-row" data-row>
+                {{ f.id }}
+                {{ f.label }}
+                {{ f.value }}
+                <span>
+                    {% if f.instance.pk %}<span style="display:none">{{ f.DELETE }}</span>{% endif %}
+                    <button type="button" class="row-remove" data-remove>Remove</button>
+                </span>
+                {{ f.label.errors }}{{ f.value.errors }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <template id="specTemplate">
+        <div class="shop-row" data-row>
+            {{ specs.empty_form.label }}
+            {{ specs.empty_form.value }}
+            <span><button type="button" class="row-remove" data-remove>Remove</button></span>
+        </div>
+    </template>
+
+    <button type="button" class="row-add" data-add="spec">+ Add specification</button>
+
+</div>
+
+
+<div class="form-section">
+
+    <div class="form-section-title">
+        <h3>Colours</h3>
+        <p>Colour options shown as swatches. The colour a customer picks is saved on their order.</p>
+    </div>
+
+    {{ colors.management_form }}
+    {{ colors.non_form_errors }}
+
+    <div class="shop-rows" id="colorRows">
+        {% for f in colors %}
+            <div class="shop-row color-row" data-row>
+                {{ f.id }}
+                {{ f.name }}
+                {{ f.hex_code }}
+                <span>
+                    {% if f.instance.pk %}<span style="display:none">{{ f.DELETE }}</span>{% endif %}
+                    <button type="button" class="row-remove" data-remove>Remove</button>
+                </span>
+                {{ f.name.errors }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <template id="colorTemplate">
+        <div class="shop-row color-row" data-row>
+            {{ colors.empty_form.name }}
+            {{ colors.empty_form.hex_code }}
+            <span><button type="button" class="row-remove" data-remove>Remove</button></span>
+        </div>
+    </template>
+
+    <button type="button" class="row-add" data-add="color">+ Add colour</button>
+
+</div>
+
+<script>
+(function () {
+    function setup(kind, rowsId, tplId, prefix) {
+        var rows = document.getElementById(rowsId);
+        var tpl = document.getElementById(tplId);
+        var total = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+        document.querySelector('[data-add="' + kind + '"]').addEventListener("click", function () {
+            var n = parseInt(total.value, 10);
+            var html = tpl.innerHTML.replace(/__prefix__/g, n);
+            var holder = document.createElement("div");
+            holder.innerHTML = html.trim();
+            rows.appendChild(holder.firstElementChild);
+            total.value = n + 1;
+        });
+        rows.addEventListener("click", function (e) {
+            var btn = e.target.closest("[data-remove]");
+            if (!btn) return;
+            var row = btn.closest("[data-row]");
+            var del = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (del) { del.checked = true; row.classList.add("is-deleted"); }
+            else { row.remove(); renumber(rows, prefix, total); }
+        });
+    }
+    function renumber(rows, prefix, total) {
+        // Renumber unsaved rows so form indexes stay consecutive.
+        var all = rows.querySelectorAll("[data-row]");
+        all.forEach(function (row, i) {
+            row.querySelectorAll("input,select").forEach(function (el) {
+                ["name", "id"].forEach(function (a) {
+                    var v = el.getAttribute(a);
+                    if (v) el.setAttribute(a, v.replace(new RegExp("^(id_)?" + prefix + "-\\d+-"), function (m, p) { return (p || "") + prefix + "-" + i + "-"; }));
+                });
+            });
+        });
+        total.value = all.length;
+    }
+    setup("spec", "specRows", "specTemplate", "specs");
+    setup("color", "colorRows", "colorTemplate", "colors");
+})();
+</script>

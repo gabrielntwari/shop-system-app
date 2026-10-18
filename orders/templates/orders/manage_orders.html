@@ -34,17 +34,39 @@
         background: #1F3B5C;
         color: white;
     }
+    .filter-tabs { flex-wrap: wrap; }
+
+    .order-search { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .order-search input { flex: 1; min-width: 220px; padding: 10px 12px;
+        border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+
+    .oc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 14px; margin: 12px 0; }
+    .oc-box { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; font-size: 13px; }
+    .oc-box h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; }
+    .oc-box div { padding: 2px 0; color: #111827; word-break: break-word; }
+    .oc-box a { color: #1d4ed8; text-decoration: none; }
+    .oc-note { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .oc-note div { white-space: pre-line; }
+    .oc-warn { color: #dc2626; font-weight: 600; }
 </style>
 {% endblock %}
 
 {% block content %}
 
+<form method="get" class="order-search">
+    <input type="hidden" name="status" value="{{ selected_status }}">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search order number, customer name, phone or email">
+    <button type="submit" class="btn btn-primary">Search</button>
+    {% if query %}<a href="?status={{ selected_status }}" class="btn btn-secondary">Clear</a>{% endif %}
+</form>
+
 <div class="filter-tabs">
-    <a href="?status=pending" class="{% if selected_status == 'pending' %}active{% endif %}">Pending</a>
-    <a href="?status=paid" class="{% if selected_status == 'paid' %}active{% endif %}">Paid</a>
-    <a href="?status=delivered" class="{% if selected_status == 'delivered' %}active{% endif %}">Delivered</a>
-    <a href="?status=cancelled" class="{% if selected_status == 'cancelled' %}active{% endif %}">Cancelled</a>
-    <a href="?status=all" class="{% if selected_status == 'all' %}active{% endif %}">All</a>
+    <a href="?status=pending{% if query %}&q={{ query|urlencode }}{% endif %}" class="{% if selected_status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="?status=paid{% if query %}&q={{ query|urlencode }}{% endif %}" class="{% if selected_status == 'paid' %}active{% endif %}">Paid</a>
+    <a href="?status=delivered{% if query %}&q={{ query|urlencode }}{% endif %}" class="{% if selected_status == 'delivered' %}active{% endif %}">Delivered</a>
+    <a href="?status=cancelled{% if query %}&q={{ query|urlencode }}{% endif %}" class="{% if selected_status == 'cancelled' %}active{% endif %}">Cancelled</a>
+    <a href="?status=all{% if query %}&q={{ query|urlencode }}{% endif %}" class="{% if selected_status == 'all' %}active{% endif %}">All</a>
 </div>
 
 {% for order in orders %}
@@ -54,7 +76,8 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
 
             <div>
-                <strong>{{ order.order_number }}</strong> — {{ order.customer.username }}
+                <strong>{{ order.order_number }}</strong> — {{ order.contact_name }}
+                <small style="color:#6b7280;">({{ order.customer.username }})</small>
                 <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
             </div>
 
@@ -68,7 +91,7 @@
                 <tbody>
                     {% for item in order.items.all %}
                         <tr>
-                            <td>{{ item.product.item_name }}</td>
+                            <td>{{ item.product.item_name }}{% if item.color %} <small>({{ item.color }})</small>{% endif %}</td>
                             <td>{{ item.quantity }}</td>
                             <td>{{ item.amount|floatformat:2 }} RWF</td>
                         </tr>
@@ -81,11 +104,28 @@
             Total: {{ order.total|floatformat:2 }} RWF
         </div>
 
-        {% if order.delivery_phone or order.delivery_address %}
-            <p style="font-size: 13px; color: #6b7280;">
-                Deliver to: {{ order.delivery_phone }} {{ order.delivery_address }}
-            </p>
-        {% endif %}
+        <div class="oc-grid">
+
+            <div class="oc-box">
+                <h4>Customer</h4>
+                <div><b>{{ order.contact_name }}</b></div>
+                <div>Phone: {% if order.contact_phone %}<a href="tel:{{ order.contact_phone }}">{{ order.contact_phone }}</a>{% else %}—{% endif %}</div>
+                <div>Email: {% if order.contact_email %}<a href="mailto:{{ order.contact_email }}">{{ order.contact_email }}</a>{% else %}—{% endif %}</div>
+            </div>
+
+            <div class="oc-box">
+                <h4>Deliver to</h4>
+                {% for line in order.address_lines %}<div>{{ line }}</div>{% empty %}<div>—</div>{% endfor %}
+            </div>
+
+            {% if order.notes %}
+                <div class="oc-box oc-note">
+                    <h4>Customer note</h4>
+                    <div>{{ order.notes }}</div>
+                </div>
+            {% endif %}
+
+        </div>
 
         {% if order.payment_proofs.all %}
             <p><strong>Proof of payment:</strong></p>
@@ -103,7 +143,9 @@
             <p style="color: #dc2626; font-size: 13px;">No proof of payment submitted yet.</p>
         {% endif %}
 
-        <div style="display: flex; gap: 10px; margin-top: 12px;">
+        <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+
+            <a href="{% url 'order_detail' order.id %}" class="btn btn-secondary">View full details</a>
 
             {% if order.status == "pending" %}
 
