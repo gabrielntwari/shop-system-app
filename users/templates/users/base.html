@@ -227,6 +227,13 @@
 
     <header class="topbar">
 
+        <button type="button" class="nav-toggle" id="navToggle"
+                aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">
+            <span></span><span></span><span></span>
+        </button>
+
+        <div class="nav-backdrop" id="navBackdrop"></div>
+
 
         <!-- =================================================
              BRAND
@@ -263,7 +270,9 @@
              NAVIGATION
         ================================================= -->
 
-        <nav class="navigation">
+        <nav class="navigation" id="mainNav">
+
+            <button type="button" class="nav-close" id="navClose" aria-label="Close menu">✕</button>
 
 
             <!-- =================================================
@@ -707,6 +716,52 @@
 <!-- =================================================
      JAVASCRIPT
 ================================================= -->
+
+<script>
+(function () {
+    var topbar = document.querySelector('.topbar');
+    var nav = document.getElementById('mainNav');
+    var toggle = document.getElementById('navToggle');
+    var backdrop = document.getElementById('navBackdrop');
+    var closeBtn = document.getElementById('navClose');
+    if (!topbar || !nav || !toggle) return;
+
+    function setOpen(open) {
+        nav.classList.toggle('open', open);
+        backdrop.classList.toggle('open', open);
+        document.body.classList.toggle('nav-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    // Collapse into the drawer when the links no longer fit (or on phones).
+    function check() {
+        setOpen(false);
+        topbar.classList.remove('nav-collapsed');
+        var overflowing = nav.scrollWidth > nav.clientWidth + 1;
+        if (overflowing || window.innerWidth <= 768) {
+            topbar.classList.add('nav-collapsed');
+        }
+    }
+
+    toggle.addEventListener('click', function () {
+        setOpen(!nav.classList.contains('open'));
+    });
+    backdrop.addEventListener('click', function () { setOpen(false); });
+    if (closeBtn) closeBtn.addEventListener('click', function () { setOpen(false); });
+    nav.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') setOpen(false);
+    });
+
+    window.addEventListener('resize', check);
+    window.addEventListener('load', check);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(check);
+    check();
+})();
+</script>
+
 
 <script src="{% static 'js/main.js' %}"></script>
 
